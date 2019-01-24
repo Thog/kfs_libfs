@@ -35,6 +35,7 @@ impl BlockDevice for LinuxBlockDevice {
         blocks: &mut [Block],
         index: BlockIndex
     ) -> Result<()> {
+        println!("Reading offset 0x{:x}", index.0);
         self.file
             .borrow_mut()
             .seek(SeekFrom::Start(index.into_offset())).unwrap();
