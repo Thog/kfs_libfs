@@ -11,6 +11,11 @@ use libfs::*;
 use libfs::fat;
 use libfs::fat::block::*;
 
+#[macro_use]
+extern crate log;
+
+extern crate env_logger;
+
 #[derive(Debug)]
 struct LinuxBlockDevice {
     file: RefCell<File>,
@@ -35,7 +40,7 @@ impl BlockDevice for LinuxBlockDevice {
         blocks: &mut [Block],
         index: BlockIndex
     ) -> Result<()> {
-        println!("Reading offset 0x{:x}", index.0);
+        info!("Reading block index 0x{:x} (0x{:x})", index.0, index.into_offset());
         self.file
             .borrow_mut()
             .seek(SeekFrom::Start(index.into_offset())).unwrap();
@@ -62,7 +67,14 @@ impl BlockDevice for LinuxBlockDevice {
 }
 
 fn main() -> Result<()> {
-    let mut system_device = LinuxBlockDevice::new("system.img")?;
-    let filesystem = fat::get_partition(system_device, BlockIndex(0)).unwrap();
+    env_logger::init();
+
+    let mut system_device = LinuxBlockDevice::new("/sgoinfre/goinfre/Perso/tguillem/BIS-PARTITION-SYSTEM1.bin")?;
+    let filesystem = fat::get_raw_partition(system_device).unwrap();
+
+    let root_dir = filesystem.get_root_directory();
+
+    root_dir.test();
+
     Ok(())
 }
