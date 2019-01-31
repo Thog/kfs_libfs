@@ -1,15 +1,14 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-
 use std::cell::RefCell;
 use std::io::SeekFrom;
 use std::path::Path;
 
 use kfs_libfs as libfs;
-use libfs::*;
 use libfs::fat;
 use libfs::fat::block::*;
+use libfs::*;
 
 #[macro_use]
 extern crate log;
@@ -27,25 +26,27 @@ impl LinuxBlockDevice {
         P: AsRef<Path>,
     {
         Ok(LinuxBlockDevice {
-            file: RefCell::new(File::open(device_name).unwrap())
+            file: RefCell::new(File::open(device_name).unwrap()),
         })
     }
 }
 
-
 impl BlockDevice for LinuxBlockDevice {
-
-    fn read(
-        &self,
-        blocks: &mut [Block],
-        index: BlockIndex
-    ) -> Result<()> {
-        info!("Reading block index 0x{:x} (0x{:x})", index.0, index.into_offset());
+    fn read(&self, blocks: &mut [Block], index: BlockIndex) -> Result<()> {
+        info!(
+            "Reading block index 0x{:x} (0x{:x})",
+            index.0,
+            index.into_offset()
+        );
         self.file
             .borrow_mut()
-            .seek(SeekFrom::Start(index.into_offset())).unwrap();
+            .seek(SeekFrom::Start(index.into_offset()))
+            .unwrap();
         for block in blocks.iter_mut() {
-            self.file.borrow_mut().read_exact(&mut block.contents).unwrap();
+            self.file
+                .borrow_mut()
+                .read_exact(&mut block.contents)
+                .unwrap();
         }
         Ok(())
     }
@@ -53,7 +54,8 @@ impl BlockDevice for LinuxBlockDevice {
     fn write(&self, blocks: &[Block], index: BlockIndex) -> Result<()> {
         self.file
             .borrow_mut()
-            .seek(SeekFrom::Start(index.into_offset())).unwrap();
+            .seek(SeekFrom::Start(index.into_offset()))
+            .unwrap();
         for block in blocks.iter() {
             self.file.borrow_mut().write_all(&block.contents).unwrap();
         }
