@@ -8,7 +8,6 @@ use std::path::Path;
 use kfs_libfs as libfs;
 use libfs::fat;
 use libfs::fat::block::*;
-use libfs::*;
 
 #[macro_use]
 extern crate log;
@@ -71,7 +70,7 @@ impl BlockDevice for LinuxBlockDevice {
 fn main() -> Result<()> {
     env_logger::init();
 
-    let mut system_device = LinuxBlockDevice::new("system.img")?;
+    let system_device = LinuxBlockDevice::new("system.img")?;
     let filesystem = fat::get_partition(system_device, BlockIndex(0)).unwrap();
 
     let root_dir = filesystem.get_root_directory();
