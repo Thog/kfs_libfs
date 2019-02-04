@@ -70,8 +70,9 @@ impl BlockDevice for LinuxBlockDevice {
 fn main() -> Result<()> {
     env_logger::init();
 
-    let system_device = LinuxBlockDevice::new("system.img")?;
-    let filesystem = fat::get_partition(system_device, BlockIndex(0)).unwrap();
+    let system_device =
+        LinuxBlockDevice::new("/sgoinfre/goinfre/Perso/tguillem/BIS-PARTITION-SYSTEM1.bin")?;
+    let filesystem = fat::get_raw_partition(system_device).unwrap();
 
     let root_dir = filesystem.get_root_directory();
 
