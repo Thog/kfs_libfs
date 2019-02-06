@@ -8,8 +8,9 @@ use std::path::Path;
 use kfs_libfs as libfs;
 use libfs::fat;
 use libfs::fat::block::*;
-
+use libfs::fat::cluster::Cluster;
 use libfs::fat::directory::Directory;
+use libfs::fat::table::FatClusterIter;
 
 #[macro_use]
 extern crate log;
@@ -69,10 +70,20 @@ impl BlockDevice for LinuxBlockDevice {
     }
 }
 
-fn print_dir<T>(directory: Directory<T>) where T: BlockDevice {
+fn print_dir<T>(directory: Directory<T>, level: u32) where T: BlockDevice {
     for dir_entry in directory.iter() {
-        let name = dir_entry.file_name;
-        println!("- \"{}\"", name);
+        if dir_entry.file_name == "." || dir_entry.file_name == ".." {
+            continue;
+        }
+
+        for i in 0..level {
+            print!("    ");
+        }
+        println!("- \"{}\" (Cluster: 0x{:x})", dir_entry.file_name, dir_entry.start_cluster.0);
+        if dir_entry.attribute.is_directory() {
+                let dir = Directory::from_entry(directory.fs, dir_entry);
+                print_dir(dir, level + 1);
+        }
     }
 }
 
@@ -84,7 +95,19 @@ fn main() -> Result<()> {
 
     let root_dir = filesystem.get_root_directory();
 
-    print_dir(root_dir);
+    //print_dir(root_dir, 0);
+
+    for dir_entry in root_dir.fat_dir_entry_iter() {
+        if dir_entry.is_long_file_name() {
+            continue;
+        }
+        println!("{:?}", dir_entry);
+    }
+
+    for cluster in FatClusterIter::new(&filesystem, &Cluster(5)) {
+        println!("0x{:x}", cluster.to_data_block_index(&filesystem).into_offset());
+    }
+
 
     Ok(())
 }
