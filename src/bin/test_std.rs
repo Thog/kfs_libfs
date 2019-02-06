@@ -9,6 +9,8 @@ use kfs_libfs as libfs;
 use libfs::fat;
 use libfs::fat::block::*;
 
+use libfs::fat::directory::Directory;
+
 #[macro_use]
 extern crate log;
 
@@ -32,11 +34,11 @@ impl LinuxBlockDevice {
 
 impl BlockDevice for LinuxBlockDevice {
     fn read(&self, blocks: &mut [Block], index: BlockIndex) -> Result<()> {
-        info!(
+        /*trace!(
             "Reading block index 0x{:x} (0x{:x})",
             index.0,
             index.into_offset()
-        );
+        );*/
         self.file
             .borrow_mut()
             .seek(SeekFrom::Start(index.into_offset()))
@@ -67,6 +69,13 @@ impl BlockDevice for LinuxBlockDevice {
     }
 }
 
+fn print_dir<T>(directory: Directory<T>) where T: BlockDevice {
+    for dir_entry in directory.iter() {
+        let name = dir_entry.file_name;
+        println!("- \"{}\"", name);
+    }
+}
+
 fn main() -> Result<()> {
     env_logger::init();
 
@@ -75,7 +84,7 @@ fn main() -> Result<()> {
 
     let root_dir = filesystem.get_root_directory();
 
-    root_dir.test();
+    print_dir(root_dir);
 
     Ok(())
 }
