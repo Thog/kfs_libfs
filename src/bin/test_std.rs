@@ -80,10 +80,10 @@ fn print_dir<T>(directory: Directory<T>, level: u32) where T: BlockDevice {
             print!("    ");
         }
         println!("- \"{}\" (Cluster: 0x{:x})", dir_entry.file_name, dir_entry.start_cluster.0);
-        if dir_entry.attribute.is_directory() {
+        /*if dir_entry.attribute.is_directory() {
                 let dir = Directory::from_entry(directory.fs, dir_entry);
                 print_dir(dir, level + 1);
-        }
+        }*/
     }
 }
 
@@ -95,17 +95,19 @@ fn main() -> Result<()> {
 
     let root_dir = filesystem.get_root_directory();
 
-    //print_dir(root_dir, 0);
+    print_dir(root_dir, 0);
 
-    for dir_entry in root_dir.fat_dir_entry_iter() {
+    let root_dir = filesystem.get_root_directory();
+
+    /*for dir_entry in root_dir.fat_dir_entry_iter() {
         if dir_entry.is_long_file_name() {
             continue;
         }
         println!("{:?}", dir_entry);
-    }
+    }*/
 
     for cluster in FatClusterIter::new(&filesystem, &Cluster(5)) {
-        println!("0x{:x}", cluster.to_data_block_index(&filesystem).into_offset());
+        println!("{:x} 0x{:x}", cluster.0, cluster.to_fat_block_index(&filesystem).into_offset() + (cluster.to_fat_offset() % Block::LEN_U32) as u64);
     }
 
 
