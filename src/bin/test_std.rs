@@ -100,17 +100,5 @@ fn main() -> Result<()> {
 
     let root_dir = filesystem.get_root_directory();
 
-    /*for dir_entry in root_dir.fat_dir_entry_iter() {
-        if dir_entry.is_long_file_name() {
-            continue;
-        }
-        println!("{:?}", dir_entry);
-    }
-
-    for cluster in FatClusterIter::new(&filesystem, &Cluster(2)) {
-        println!("{:x} 0x{:x}", cluster.0, cluster.to_fat_block_index(&filesystem).into_offset() + (cluster.to_fat_offset() % Block::LEN_U32) as u64);
-    }*/
-
-
     Ok(())
 }
