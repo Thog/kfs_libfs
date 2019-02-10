@@ -80,20 +80,21 @@ fn print_dir<T>(directory: Directory<T>, level: u32) where T: BlockDevice {
             print!("    ");
         }
         println!("- \"{}\" (Cluster: 0x{:x})", dir_entry.file_name, dir_entry.start_cluster.0);
-        /*if dir_entry.attribute.is_directory() {
+        if dir_entry.attribute.is_directory() {
                 let dir = Directory::from_entry(directory.fs, dir_entry);
                 print_dir(dir, level + 1);
-        }*/
+        }
     }
 }
 
 fn main() -> Result<()> {
     env_logger::init();
 
-    let system_device = LinuxBlockDevice::new("/sgoinfre/goinfre/Perso/tguillem/BIS-PARTITION-SYSTEM1.bin")?;
+    let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
     let filesystem = fat::get_raw_partition(system_device).unwrap();
 
     let root_dir = filesystem.get_root_directory();
+    println!("{:?}", root_dir.dir_info);
 
     print_dir(root_dir, 0);
 
@@ -104,11 +105,11 @@ fn main() -> Result<()> {
             continue;
         }
         println!("{:?}", dir_entry);
-    }*/
-
-    for cluster in FatClusterIter::new(&filesystem, &Cluster(5)) {
-        println!("{:x} 0x{:x}", cluster.0, cluster.to_fat_block_index(&filesystem).into_offset() + (cluster.to_fat_offset() % Block::LEN_U32) as u64);
     }
+
+    for cluster in FatClusterIter::new(&filesystem, &Cluster(2)) {
+        println!("{:x} 0x{:x}", cluster.0, cluster.to_fat_block_index(&filesystem).into_offset() + (cluster.to_fat_offset() % Block::LEN_U32) as u64);
+    }*/
 
 
     Ok(())
