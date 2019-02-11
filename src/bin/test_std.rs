@@ -7,10 +7,11 @@ use std::path::Path;
 
 use kfs_libfs as libfs;
 use libfs::fat;
-use libfs::fat::block::*;
-use libfs::fat::cluster::Cluster;
-use libfs::fat::directory::Directory;
-use libfs::fat::table::FatClusterIter;
+use libfs::fat::detail;
+use libfs::fat::detail::block::*;
+use libfs::fat::detail::cluster::Cluster;
+use libfs::fat::detail::directory::Directory;
+use libfs::fat::detail::table::FatClusterIter;
 
 #[macro_use]
 extern crate log;
@@ -97,7 +98,7 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
-    let filesystem = fat::get_raw_partition(system_device).unwrap();
+    let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
 
     let root_dir = filesystem.get_root_directory();
     println!("{:?}", root_dir.dir_info);
