@@ -6,12 +6,11 @@ use std::io::SeekFrom;
 use std::path::Path;
 
 use kfs_libfs as libfs;
+use libfs::*;
 use libfs::fat;
 use libfs::fat::detail;
 use libfs::fat::detail::block::*;
 use libfs::fat::detail::cluster::Cluster;
-use libfs::fat::detail::directory::Directory;
-use libfs::fat::detail::table::FatClusterIter;
 
 #[macro_use]
 extern crate log;
@@ -71,11 +70,14 @@ impl BlockDevice for LinuxBlockDevice {
     }
 }
 
-fn print_dir<T>(directory: Directory<T>, level: u32)
+// TODO: redo that after the open_dir is done
+/*fn print_dir<T>(directory: Directory<T>, level: u32)
 where
     T: BlockDevice,
 {
-    for dir_entry in directory.iter() {
+    let iterator = directory.iter();
+    let fs = iterator.raw_iter.cluster_iter.fs;
+    for dir_entry in iterator {
         if dir_entry.file_name == "." || dir_entry.file_name == ".." {
             continue;
         }
@@ -88,11 +90,11 @@ where
             dir_entry.file_name, dir_entry.start_cluster.0
         );
         if dir_entry.attribute.is_directory() {
-            let dir = Directory::from_entry(directory.fs, dir_entry);
+            let dir = Directory::from_entry(fs, dir_entry);
             print_dir(dir, level + 1);
         }
     }
-}
+}*/
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -100,12 +102,20 @@ fn main() -> Result<()> {
     let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
 
-    let root_dir = filesystem.get_root_directory();
-    println!("{:?}", root_dir.dir_info);
+    let mut root_dir = filesystem.open_directory("/", DirFilterFlags::ALL).unwrap();
 
-    print_dir(root_dir, 0);
+    let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
+        path: [0x0; DirectoryEntry::PATH_LEN],
+        entry_type: DirectoryEntryType::Directory,
+        file_size: 0
+    }; 1];
 
-    let root_dir = filesystem.get_root_directory();
+    while root_dir.read(&mut entries).unwrap() != 0 {
+        for entry in entries.iter() {
+            let path = String::from_utf8_lossy(&entry.path);
+            println!("- \"{}\" (type: {:?}, file_size: {})", path, entry.entry_type, entry.file_size);
+        }
+    }
 
     Ok(())
 }
