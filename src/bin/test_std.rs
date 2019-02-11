@@ -70,7 +70,10 @@ impl BlockDevice for LinuxBlockDevice {
     }
 }
 
-fn print_dir<T>(directory: Directory<T>, level: u32) where T: BlockDevice {
+fn print_dir<T>(directory: Directory<T>, level: u32)
+where
+    T: BlockDevice,
+{
     for dir_entry in directory.iter() {
         if dir_entry.file_name == "." || dir_entry.file_name == ".." {
             continue;
@@ -79,10 +82,13 @@ fn print_dir<T>(directory: Directory<T>, level: u32) where T: BlockDevice {
         for i in 0..level {
             print!("    ");
         }
-        println!("- \"{}\" (Cluster: 0x{:x})", dir_entry.file_name, dir_entry.start_cluster.0);
+        println!(
+            "- \"{}\" (Cluster: 0x{:x})",
+            dir_entry.file_name, dir_entry.start_cluster.0
+        );
         if dir_entry.attribute.is_directory() {
-                let dir = Directory::from_entry(directory.fs, dir_entry);
-                print_dir(dir, level + 1);
+            let dir = Directory::from_entry(directory.fs, dir_entry);
+            print_dir(dir, level + 1);
         }
     }
 }
