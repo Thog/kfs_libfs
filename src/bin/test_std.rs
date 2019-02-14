@@ -7,9 +7,7 @@ use std::path::Path;
 
 use kfs_libfs as libfs;
 use libfs::fat;
-use libfs::fat::detail;
 use libfs::fat::detail::block::*;
-use libfs::fat::detail::cluster::Cluster;
 use libfs::*;
 
 #[macro_use]
@@ -96,13 +94,32 @@ where
     }
 }*/
 
+fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str)
+{
+    let mut f = File::create(path).unwrap();
+
+    let mut buffer: [u8; 0x100] = [0x0; 0x100];
+    let mut offset = 0;
+
+    loop {
+        let read_size = file.read(offset as u64, &mut buffer).unwrap() as usize;
+        
+        if read_size != buffer.len() {
+            break;
+        }
+        f.write_all(&buffer[0..read_size]).unwrap();
+        offset += read_size;
+    }
+
+}
+
 fn main() -> Result<()> {
     env_logger::init();
 
     let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
 
-    let mut root_dir = filesystem.open_directory("/save", DirFilterFlags::ALL).unwrap();
+    let mut root_dir = filesystem.open_directory("/", DirFilterFlags::ALL).unwrap();
 
     let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
         path: [0x0; DirectoryEntry::PATH_LEN],
@@ -120,5 +137,7 @@ fn main() -> Result<()> {
         }
     }
 
+    let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
+    dump_to_file(&mut some_file, "0000000000000001");
     Ok(())
 }
