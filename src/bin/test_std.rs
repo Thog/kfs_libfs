@@ -6,11 +6,11 @@ use std::io::SeekFrom;
 use std::path::Path;
 
 use kfs_libfs as libfs;
-use libfs::*;
 use libfs::fat;
 use libfs::fat::detail;
 use libfs::fat::detail::block::*;
 use libfs::fat::detail::cluster::Cluster;
+use libfs::*;
 
 #[macro_use]
 extern crate log;
@@ -99,7 +99,7 @@ where
 fn main() -> Result<()> {
     env_logger::init();
 
-    let system_device = LinuxBlockDevice::new("/sgoinfre/goinfre/Perso/tguillem/BIS-PARTITION-SYSTEM1.bin")?;
+    let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
 
     let mut root_dir = filesystem.open_directory("/", DirFilterFlags::ALL).unwrap();
@@ -107,13 +107,16 @@ fn main() -> Result<()> {
     let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
         path: [0x0; DirectoryEntry::PATH_LEN],
         entry_type: DirectoryEntryType::Directory,
-        file_size: 0
+        file_size: 0,
     }; 1];
 
     while root_dir.read(&mut entries).unwrap() != 0 {
         for entry in entries.iter() {
             let path = String::from_utf8_lossy(&entry.path);
-            println!("- \"{}\" (type: {:?}, file_size: {})", path, entry.entry_type, entry.file_size);
+            println!(
+                "- \"{}\" (type: {:?}, file_size: {})",
+                path, entry.entry_type, entry.file_size
+            );
         }
     }
 
