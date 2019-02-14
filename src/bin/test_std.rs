@@ -102,7 +102,7 @@ fn main() -> Result<()> {
     let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
 
-    let mut root_dir = filesystem.open_directory("/", DirFilterFlags::ALL).unwrap();
+    let mut root_dir = filesystem.open_directory("/save", DirFilterFlags::ALL).unwrap();
 
     let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
         path: [0x0; DirectoryEntry::PATH_LEN],
