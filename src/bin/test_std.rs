@@ -98,7 +98,7 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str)
 {
     let mut f = File::create(path).unwrap();
 
-    let mut buffer: [u8; 0x400] = [0x0; 0x400];
+    let mut buffer: [u8; 0x200] = [0x0; 0x200];
     let mut offset = 0;
 
     loop {
@@ -132,12 +132,12 @@ fn main() -> Result<()> {
             let path = String::from_utf8_lossy(&entry.path);
             println!(
                 "- \"{}\" (type: {:?}, file_size: {})",
-                path, entry.entry_type, entry.file_size
+                path.trim_matches(char::from(0)), entry.entry_type, entry.file_size
             );
         }
     }
 
-    //let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
-    //dump_to_file(&mut some_file, "0000000000000001");
+    let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
+    dump_to_file(&mut some_file, "0000000000000001");
     Ok(())
 }
