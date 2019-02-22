@@ -98,7 +98,7 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str)
 {
     let mut f = File::create(path).unwrap();
 
-    let mut buffer: [u8; 0x100] = [0x0; 0x100];
+    let mut buffer: [u8; 0x400] = [0x0; 0x400];
     let mut offset = 0;
 
     loop {
@@ -137,7 +137,7 @@ fn main() -> Result<()> {
         }
     }
 
-    let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
-    dump_to_file(&mut some_file, "0000000000000001");
+    //let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
+    //dump_to_file(&mut some_file, "0000000000000001");
     Ok(())
 }
