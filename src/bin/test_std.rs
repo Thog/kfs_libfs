@@ -110,32 +110,6 @@ where
     }
 }
 
-// TODO: redo that after the open_dir is done
-/*fn print_dir<T>(directory: Directory<T>, level: u32)
-where
-    T: BlockDevice,
-{
-    let iterator = directory.iter();
-    let fs = iterator.raw_iter.cluster_iter.fs;
-    for dir_entry in iterator {
-        if dir_entry.file_name == "." || dir_entry.file_name == ".." {
-            continue;
-        }
-
-        for i in 0..level {
-            print!("    ");
-        }
-        println!(
-            "- \"{}\" (Cluster: 0x{:x})",
-            dir_entry.file_name, dir_entry.start_cluster.0
-        );
-        if dir_entry.attribute.is_directory() {
-            let dir = Directory::from_entry(fs, dir_entry);
-            print_dir(dir, level + 1);
-        }
-    }
-}*/
-
 fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) {
     let mut f = File::create(path).unwrap();
 
