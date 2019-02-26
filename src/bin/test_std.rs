@@ -27,7 +27,13 @@ impl LinuxBlockDevice {
         P: AsRef<Path>,
     {
         Ok(LinuxBlockDevice {
-            file: RefCell::new(OpenOptions::new().read(true).write(true).open(device_name).unwrap()),
+            file: RefCell::new(
+                OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .open(device_name)
+                    .unwrap(),
+            ),
         })
     }
 }
@@ -69,6 +75,41 @@ impl BlockDevice for LinuxBlockDevice {
     }
 }
 
+fn print_dir<T>(filesystem: &T, path: &str, level: u32)
+where
+    T: FileSystemOperations,
+{
+    let mut root_dir = filesystem
+        .open_directory(path, DirFilterFlags::ALL)
+        .unwrap();
+
+    let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
+        path: [0x0; DirectoryEntry::PATH_LEN],
+        entry_type: DirectoryEntryType::Directory,
+        file_size: 0,
+    }; 1];
+
+    while root_dir.read(&mut entries).unwrap() != 0 {
+        for entry in entries.iter() {
+            let path = String::from_utf8_lossy(&entry.path);
+            let entry_name = path.trim_matches(char::from(0));
+
+            for i in 0..level {
+                print!("    ");
+            }
+
+            println!(
+                "- \"{}\" (type: {:?}, file_size: {})",
+                entry_name, entry.entry_type, entry.file_size
+            );
+
+            if entry.entry_type == DirectoryEntryType::Directory {
+                print_dir(filesystem, entry_name, level + 1);
+            }
+        }
+    }
+}
+
 // TODO: redo that after the open_dir is done
 /*fn print_dir<T>(directory: Directory<T>, level: u32)
 where
@@ -95,8 +136,7 @@ where
     }
 }*/
 
-fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str)
-{
+fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) {
     let mut f = File::create(path).unwrap();
 
     let mut buffer: [u8; 0x200] = [0x0; 0x200];
@@ -104,14 +144,13 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str)
 
     loop {
         let read_size = file.read(offset as u64, &mut buffer).unwrap() as usize;
-        
+
         if read_size != buffer.len() {
             break;
         }
         f.write_all(&buffer[0..read_size]).unwrap();
         offset += read_size;
     }
-
 }
 
 fn main() -> Result<()> {
@@ -119,24 +158,7 @@ fn main() -> Result<()> {
 
     let system_device = LinuxBlockDevice::new("system.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
-
-    let mut root_dir = filesystem.open_directory("/", DirFilterFlags::ALL).unwrap();
-
-    let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
-        path: [0x0; DirectoryEntry::PATH_LEN],
-        entry_type: DirectoryEntryType::Directory,
-        file_size: 0,
-    }; 1];
-
-    while root_dir.read(&mut entries).unwrap() != 0 {
-        for entry in entries.iter() {
-            let path = String::from_utf8_lossy(&entry.path);
-            println!(
-                "- \"{}\" (type: {:?}, file_size: {})",
-                path.trim_matches(char::from(0)), entry.entry_type, entry.file_size
-            );
-        }
-    }
+    print_dir(&filesystem, "/", 0);
 
     let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
     println!("Allocated Cluster {}", allocated_cluster.0);
