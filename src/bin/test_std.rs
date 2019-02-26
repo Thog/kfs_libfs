@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::prelude::*;
 
 use std::cell::RefCell;
@@ -26,7 +27,7 @@ impl LinuxBlockDevice {
         P: AsRef<Path>,
     {
         Ok(LinuxBlockDevice {
-            file: RefCell::new(File::open(device_name).unwrap()),
+            file: RefCell::new(OpenOptions::new().read(true).write(true).open(device_name).unwrap()),
         })
     }
 }
@@ -116,7 +117,7 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str)
 fn main() -> Result<()> {
     env_logger::init();
 
-    let system_device = LinuxBlockDevice::new("BIS-PARTITION-SYSTEM1.bin")?;
+    let system_device = LinuxBlockDevice::new("system.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
 
     let mut root_dir = filesystem.open_directory("/", DirFilterFlags::ALL).unwrap();
@@ -137,7 +138,12 @@ fn main() -> Result<()> {
         }
     }
 
-    let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
-    dump_to_file(&mut some_file, "0000000000000001");
+    let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
+    println!("Allocated Cluster {}", allocated_cluster.0);
+
+    filesystem.free_cluster(allocated_cluster, None).unwrap();
+
+    //let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
+    //dump_to_file(&mut some_file, "0000000000000001");
     Ok(())
 }
