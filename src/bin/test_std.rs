@@ -135,9 +135,10 @@ fn main() -> Result<()> {
     print_dir(&filesystem, "/", 0);
 
     let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
-    println!("Allocated Cluster {}", allocated_cluster.0);
+    //println!("Allocated Cluster {}", allocated_cluster.0);
 
-    filesystem.free_cluster(allocated_cluster, None).unwrap();
+    //filesystem.free_cluster(allocated_cluster, None).unwrap();
+    filesystem.unlink("/saveMeta/0000000000000015").unwrap();
 
     //let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE).unwrap();
     //dump_to_file(&mut some_file, "0000000000000001");
