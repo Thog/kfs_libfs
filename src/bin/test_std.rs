@@ -118,11 +118,10 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) {
 
     loop {
         let read_size = file.read(offset as u64, &mut buffer).unwrap() as usize;
-
-        if read_size != buffer.len() {
+        f.write_all(&buffer[0..read_size]).unwrap();
+        if read_size == 0 {
             break;
         }
-        f.write_all(&buffer[0..read_size]).unwrap();
         offset += read_size;
     }
 }
@@ -146,8 +145,12 @@ fn main() -> Result<()> {
             FileModeFlags::READABLE | FileModeFlags::WRITABLE,
         )
         .unwrap();
-    //let file_len = some_file.get_len().unwrap();
-    //some_file.set_len(1).unwrap();
-    //dump_to_file(&mut some_file, "0000000000000001");
+
+    dump_to_file(&mut some_file, "PRF2SAFE_SAVE.RCV");    
+    some_file.set_len(20).unwrap();
+    let file_len = some_file.get_len().unwrap();
+    let data = b"HELLO WORLD";
+    some_file.write(file_len - data.len() as u64, data).unwrap();
+    dump_to_file(&mut some_file, "PRF2SAFE.RCV");
     Ok(())
 }
