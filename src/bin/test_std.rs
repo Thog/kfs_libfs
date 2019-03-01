@@ -130,7 +130,7 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) {
 fn main() -> Result<()> {
     env_logger::init();
 
-    let system_device = LinuxBlockDevice::new("/sgoinfre/goinfre/Perso/tguillem/system.bin")?;
+    let system_device = LinuxBlockDevice::new("system.bin")?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
     //print_dir(&filesystem, "/", 0);
 
@@ -140,7 +140,12 @@ fn main() -> Result<()> {
     filesystem.free_cluster(allocated_cluster, None).unwrap();
     //filesystem.unlink("/saveMeta/0000000000000015").unwrap();
 
-    let mut some_file = filesystem.open_file("/save/0000000000000001", FileModeFlags::READABLE | FileModeFlags::WRITABLE).unwrap();
+    let mut some_file = filesystem
+        .open_file(
+            "PRF2SAFE.RCV",
+            FileModeFlags::READABLE | FileModeFlags::WRITABLE,
+        )
+        .unwrap();
     let file_len = some_file.get_len().unwrap();
     some_file.set_len(file_len + 1).unwrap();
     //dump_to_file(&mut some_file, "0000000000000001");
