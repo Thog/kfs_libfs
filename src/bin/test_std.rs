@@ -146,8 +146,8 @@ fn main() -> Result<()> {
             FileModeFlags::READABLE | FileModeFlags::WRITABLE,
         )
         .unwrap();
-    let file_len = some_file.get_len().unwrap();
-    some_file.set_len(file_len + 16384).unwrap();
+    //let file_len = some_file.get_len().unwrap();
+    //some_file.set_len(1).unwrap();
     //dump_to_file(&mut some_file, "0000000000000001");
     Ok(())
 }
