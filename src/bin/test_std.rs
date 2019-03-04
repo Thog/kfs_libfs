@@ -139,18 +139,18 @@ fn main() -> Result<()> {
     //filesystem.free_cluster(allocated_cluster, None).unwrap();
     //filesystem.unlink("/saveMeta/0000000000000015").unwrap();
 
-    let mut some_file = filesystem
+    /*let mut some_file = filesystem
         .open_file(
             "PRF2SAFE.RCV",
             FileModeFlags::READABLE | FileModeFlags::WRITABLE,
         )
-        .unwrap();
+        .unwrap();*/
 
-    dump_to_file(&mut some_file, "PRF2SAFE_SAVE.RCV");    
-    some_file.set_len(20).unwrap();
-    let file_len = some_file.get_len().unwrap();
-    let data = b"HELLO WORLD";
-    some_file.write(file_len - data.len() as u64, data).unwrap();
-    dump_to_file(&mut some_file, "PRF2SAFE.RCV");
+    //dump_to_file(&mut some_file, "PRF2SAFE_SAVE.RCV");    
+    //some_file.set_len(20).unwrap();
+    //let file_len = some_file.get_len().unwrap();
+    //let data = b"HELLO WORLD";
+    //some_file.write(file_len - data.len() as u64, data).unwrap();
+    //dump_to_file(&mut some_file, "PRF2SAFE.RCV");
     Ok(())
 }
