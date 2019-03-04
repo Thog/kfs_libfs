@@ -133,10 +133,10 @@ fn main() -> Result<()> {
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
     //print_dir(&filesystem, "/", 0);
 
-    //let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
-    //println!("Allocated Cluster {}", allocated_cluster.0);
+    let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
+    println!("Allocated Cluster {}", allocated_cluster.0);
 
-    //filesystem.free_cluster(allocated_cluster, None).unwrap();
+    filesystem.free_cluster(allocated_cluster, None).unwrap();
     //filesystem.unlink("/saveMeta/0000000000000015").unwrap();
 
     /*let mut some_file = filesystem
