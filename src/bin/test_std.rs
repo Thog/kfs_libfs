@@ -39,7 +39,7 @@ impl LinuxBlockDevice {
 }
 
 impl BlockDevice for LinuxBlockDevice {
-    fn read(&self, blocks: &mut [Block], index: BlockIndex) -> Result<()> {
+    fn raw_read(&self, blocks: &mut [Block], index: BlockIndex) -> Result<()> {
         /*trace!(
             "Reading block index 0x{:x} (0x{:x})",
             index.0,
@@ -58,7 +58,7 @@ impl BlockDevice for LinuxBlockDevice {
         Ok(())
     }
 
-    fn write(&self, blocks: &[Block], index: BlockIndex) -> Result<()> {
+    fn raw_write(&self, blocks: &[Block], index: BlockIndex) -> Result<()> {
         self.file
             .borrow_mut()
             .seek(SeekFrom::Start(index.into_offset()))
