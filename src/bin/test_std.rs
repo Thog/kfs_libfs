@@ -118,6 +118,7 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) {
 
     loop {
         let read_size = file.read(offset as u64, &mut buffer).unwrap() as usize;
+        info!("offset: {:x} size: {:x}", offset, read_size);
         f.write_all(&buffer[0..read_size]).unwrap();
         if read_size == 0 {
             break;
@@ -133,24 +134,24 @@ fn main() -> Result<()> {
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
     //print_dir(&filesystem, "/", 0);
 
-    let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
-    println!("Allocated Cluster {}", allocated_cluster.0);
+    //let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
+    //println!("Allocated Cluster {}", allocated_cluster.0);
 
-    filesystem.free_cluster(allocated_cluster, None).unwrap();
+    //filesystem.free_cluster(allocated_cluster, None).unwrap();
     //filesystem.unlink("/saveMeta/0000000000000015").unwrap();
 
-    /*let mut some_file = filesystem
+    let mut some_file = filesystem
         .open_file(
             "PRF2SAFE.RCV",
-            FileModeFlags::READABLE | FileModeFlags::WRITABLE,
+            FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
         )
-        .unwrap();*/
+        .unwrap();
 
     //dump_to_file(&mut some_file, "PRF2SAFE_SAVE.RCV");    
-    //some_file.set_len(20).unwrap();
-    //let file_len = some_file.get_len().unwrap();
-    //let data = b"HELLO WORLD";
-    //some_file.write(file_len - data.len() as u64, data).unwrap();
-    //dump_to_file(&mut some_file, "PRF2SAFE.RCV");
+    some_file.set_len(0x10000).unwrap();
+    let file_len = some_file.get_len().unwrap();
+    let data = b"HELLO WORLD";
+    some_file.write(file_len, data).unwrap();
+    dump_to_file(&mut some_file, "PRF2SAFE.RCV");
     Ok(())
 }
