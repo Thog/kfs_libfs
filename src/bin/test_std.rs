@@ -75,7 +75,7 @@ impl BlockDevice for LinuxBlockDevice {
     }
 }
 
-fn print_dir<T>(filesystem: &T, path: &str, level: u32)
+fn print_dir<T>(filesystem: &T, path: &str, level: u32, recursive: bool)
 where
     T: FileSystemOperations,
 {
@@ -99,12 +99,15 @@ where
             }
 
             println!(
-                "- \"{}\" (type: {:?}, file_size: {})",
-                entry_name, entry.entry_type, entry.file_size
+                "- \"{}\" (type: {:?}, file_size: {}, timestamp: {:?})",
+                entry_name,
+                entry.entry_type,
+                entry.file_size,
+                filesystem.get_file_timestamp_raw(entry_name)
             );
 
-            if entry.entry_type == DirectoryEntryType::Directory {
-                print_dir(filesystem, entry_name, level + 1);
+            if entry.entry_type == DirectoryEntryType::Directory && recursive {
+                print_dir(filesystem, entry_name, level + 1, recursive);
             }
         }
     }
@@ -132,7 +135,7 @@ fn main() -> Result<()> {
 
     let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap())?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
-    //print_dir(&filesystem, "/", 0);
+    print_dir(&filesystem, "/", 0, false);
 
     //let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
     //println!("Allocated Cluster {}", allocated_cluster.0);
@@ -140,19 +143,19 @@ fn main() -> Result<()> {
     //filesystem.free_cluster(allocated_cluster, None).unwrap();
     //filesystem.unlink("/saveMeta/0000000000000015").unwrap();
 
-    let mut some_file = filesystem
-        .open_file(
-            "PRF2SAFE.RCV",
-            FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
-        )
-        .unwrap();
+    /*let mut some_file = filesystem
+    .open_file(
+        "PRF2SAFE.RCV",
+        FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
+    )
+    .unwrap();*/
 
-    //dump_to_file(&mut some_file, "PRF2SAFE_SAVE.RCV");    
-    trace!("set_len(0x10001)");
-    some_file.set_len(0x10001).unwrap();
-    trace!("set_len(0x0)");
-    some_file.set_len(0x0).unwrap();
-    trace!("set_len: done");
+    //dump_to_file(&mut some_file, "PRF2SAFE_SAVE.RCV");
+    //trace!("set_len(0x10001)");
+    //some_file.set_len(0x10001).unwrap();
+    //trace!("set_len(0x0)");
+    //some_file.set_len(0x0).unwrap();
+    //trace!("set_len: done");
     //let file_len = some_file.get_len().unwrap();
     //let data = b"HELLO WORLD";
     //some_file.write(file_len, data).unwrap();
