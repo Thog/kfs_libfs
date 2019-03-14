@@ -9,6 +9,8 @@ use std::path::Path;
 use kfs_libfs as libfs;
 use libfs::fat;
 use libfs::fat::detail::block::*;
+use libfs::fat::detail::name::ShortFileName;
+use libfs::fat::detail::name::ShortFileNameContext;
 use libfs::*;
 
 #[macro_use]
@@ -135,7 +137,7 @@ fn main() -> Result<()> {
 
     let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap())?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
-    print_dir(&filesystem, "/", 0, false);
+    //print_dir(&filesystem, "/", 0, false);
 
     //let allocated_cluster = filesystem.alloc_cluster(None).unwrap();
     //println!("Allocated Cluster {}", allocated_cluster.0);
@@ -160,5 +162,16 @@ fn main() -> Result<()> {
     //let data = b"HELLO WORLD";
     //some_file.write(file_len, data).unwrap();
     //dump_to_file(&mut some_file, "PRF2SAFE.RCV");
+
+    let mut context: ShortFileNameContext = Default::default();
+    let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 1.txt");
+    println!("{:?}", short_file_name.chars());
+    let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 2.txt");
+    println!("{:?}", short_file_name.chars());
+    let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 3.txt");
+    println!("{:?}", short_file_name.chars());
+    let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 4.txt");
+    println!("{:?}", short_file_name.chars());
+
     Ok(())
 }
