@@ -163,7 +163,7 @@ fn main() -> Result<()> {
     //some_file.write(file_len, data).unwrap();
     //dump_to_file(&mut some_file, "PRF2SAFE.RCV");
 
-    let mut context: ShortFileNameContext = Default::default();
+    /*let mut context: ShortFileNameContext = Default::default();
     let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 1.txt");
     println!("{:?}", short_file_name.chars());
     let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 2.txt");
@@ -171,7 +171,9 @@ fn main() -> Result<()> {
     let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 3.txt");
     println!("{:?}", short_file_name.chars());
     let short_file_name = ShortFileName::from_unformated_str(&mut context, "File Number 4.txt");
-    println!("{:?}", short_file_name.chars());
+    println!("{:?}", short_file_name.chars());*/
+
+    filesystem.create_directory("/TESTDIR").unwrap();
 
     Ok(())
 }
