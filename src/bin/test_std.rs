@@ -138,7 +138,8 @@ fn main() -> Result<()> {
     let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap())?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
     print_dir(&filesystem, "/", 0, false);
-    //filesystem.create_file("/TEST.TXT", 10).unwrap();
+    filesystem.delete_file("/TEST.TXT").unwrap();
+    filesystem.create_file("/TEST.TXT", 10).unwrap();
     //print_dir(&filesystem, "/", 0, false);
 
     Ok(())
