@@ -137,13 +137,15 @@ fn main() -> Result<()> {
 
     let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap())?;
     let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
-    filesystem.delete_file("/TEST/DUDE/HELLO.TXT").unwrap();
+    /*filesystem.delete_file("/TEST/DUDE/HELLO.TXT").unwrap();
     filesystem.delete_directory("/TEST/DUDE").unwrap();
     filesystem.delete_directory("/TEST").unwrap();
     filesystem.create_directory("/TEST").unwrap();
     filesystem.create_directory("/TEST/DUDE").unwrap();
-    filesystem.create_file("/TEST/DUDE/HELLO.TXT", 42).unwrap();
-    print_dir(&filesystem, "/TEST", 0, true);
+    filesystem.create_file("/TEST/DUDE/HELLO.TXT", 42).unwrap();*/
+    print_dir(&filesystem, "/", 0, false);
+    filesystem.create_file("/hellof+world", 42);
+    print_dir(&filesystem, "/", 0, false);
 
     Ok(())
 }
