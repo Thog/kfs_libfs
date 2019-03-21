@@ -139,10 +139,10 @@ fn main() -> Result<()> {
     filesystem.create_directory("/TEST").unwrap();
     filesystem.create_directory("/TEST/DUDE").unwrap();
     filesystem.create_file("/TEST/DUDE/HELLO.TXT", 42).unwrap();*/
-    filesystem.delete_file("/hello_world.txt");
+    //filesystem.delete_file("/hello_world.txt");
     print_dir(&filesystem, "/", 0, false);
-    filesystem.create_file("/hello_world.txt", 42);
-    print_dir(&filesystem, "/", 0, false);
+    //filesystem.create_file("/hello_world.txt", 42);
+    //print_dir(&filesystem, "/", 0, false);
 
     Ok(())
 }
