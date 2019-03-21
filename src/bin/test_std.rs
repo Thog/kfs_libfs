@@ -6,12 +6,8 @@ use std::cell::RefCell;
 use std::io::SeekFrom;
 use std::path::Path;
 
-use kfs_libfs as libfs;
-use libfs::fat;
-use libfs::fat::detail::block::*;
-use libfs::fat::detail::name::ShortFileName;
-use libfs::fat::detail::name::ShortFileNameContext;
-use libfs::*;
+use kfs_libfs::block::*;
+use kfs_libfs::*;
 
 #[macro_use]
 extern crate log;
