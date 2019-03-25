@@ -1,3 +1,7 @@
+#![feature(alloc)]
+#![feature(integer_atomics)]
+#![no_std]
+
 pub mod attribute;
 pub mod block_iter;
 pub mod cluster;
@@ -6,16 +10,16 @@ pub mod directory;
 pub mod filesystem;
 pub mod name;
 pub mod table;
-pub(crate) mod utils;
+pub mod utils;
 
-use crate::block::{Block, BlockCount, BlockDevice, BlockIndex};
 use byteorder::{ByteOrder, LittleEndian};
+use libfs::block::{Block, BlockCount, BlockDevice, BlockIndex};
 
 use cluster::Cluster;
 
 use filesystem::FatFileSystem;
 
-use crate::FileSystemError;
+use libfs::FileSystemError;
 
 #[derive(PartialEq)]
 pub enum FatFsType {

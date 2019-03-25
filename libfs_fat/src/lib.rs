@@ -1,23 +1,26 @@
-pub mod detail;
+#![feature(alloc)]
+#![feature(integer_atomics)]
+#![no_std]
+
+extern crate alloc;
 
 use alloc::boxed::Box;
 use core::iter::Iterator;
-use detail::block_iter::BlockIndexClusterIter;
-use detail::filesystem::FatFileSystem;
-use detail::utils::align_up;
+use libfat::block_iter::BlockIndexClusterIter;
+use libfat::utils::align_up;
 
-use crate::block::Block;
-use crate::block::BlockDevice;
-use crate::block::BlockIndex;
+use libfs::block::Block;
+use libfs::block::BlockDevice;
+use libfs::block::BlockIndex;
 
-use crate::Result as FileSystemResult;
-use crate::{
+use libfs::FileSystemResult;
+use libfs::{
     DirFilterFlags, DirectoryEntry, DirectoryEntryType, DirectoryOperations, FileModeFlags,
     FileOperations, FileSystemError, FileSystemOperations, FileTimeStampRaw,
 };
 
-use detail::directory::dir_entry::DirectoryEntry as FatDirectoryEntry;
-use detail::directory::dir_entry_iterator::DirectoryEntryIterator as FatDirectoryEntryIterator;
+use libfat::directory::dir_entry::DirectoryEntry as FatDirectoryEntry;
+use libfat::directory::dir_entry_iterator::DirectoryEntryIterator as FatDirectoryEntryIterator;
 
 struct DirectoryReader<'a, T> {
     base_path: [u8; DirectoryEntry::PATH_LEN],
@@ -27,12 +30,17 @@ struct DirectoryReader<'a, T> {
 }
 
 struct FileInterface<'a, T> {
-    fs: &'a FatFileSystem<T>,
+    fs: &'a libfat::filesystem::FatFileSystem<T>,
     file_info: FatDirectoryEntry,
     mode: FileModeFlags,
 }
 
+pub struct FatFileSystem<T> {
+    inner: libfat::filesystem::FatFileSystem<T>,
+}
+
 struct DirectoryFilterPredicate;
+
 impl DirectoryFilterPredicate {
     fn all(entry: &FileSystemResult<FatDirectoryEntry>) -> bool {
         if entry.is_err() {
@@ -79,12 +87,18 @@ where
     fn get_dir_from_path(
         &self,
         path: &str,
-    ) -> FileSystemResult<detail::directory::Directory<'_, B>> {
+    ) -> FileSystemResult<libfat::directory::Directory<'_, B>> {
         if path == "/" {
-            Ok(self.get_root_directory())
+            Ok(self.inner.get_root_directory())
         } else {
-            self.get_root_directory().open_dir(path)
+            self.inner.get_root_directory().open_dir(path)
         }
+    }
+
+    pub fn get_raw_partition(block_device: B) -> FileSystemResult<Self> {
+        let inner_fs = libfat::get_raw_partition(block_device)?;
+
+        Ok(FatFileSystem { inner: inner_fs })
     }
 }
 
@@ -93,30 +107,30 @@ where
     B: BlockDevice,
 {
     fn create_file(&self, path: &str, size: u64) -> FileSystemResult<()> {
-        self.touch(path)?;
+        self.inner.touch(path)?;
 
         let mut file = self.open_file(path, FileModeFlags::APPENDABLE)?;
         file.set_len(size)
     }
 
     fn create_directory(&self, path: &str) -> FileSystemResult<()> {
-        self.mkdir(path)
+        self.inner.mkdir(path)
     }
 
     fn rename_file(&self, old_path: &str, new_path: &str) -> FileSystemResult<()> {
-        self.rename(old_path, new_path, false)
+        self.inner.rename(old_path, new_path, false)
     }
 
     fn rename_directory(&self, old_path: &str, new_path: &str) -> FileSystemResult<()> {
-        self.rename(old_path, new_path, true)
+        self.inner.rename(old_path, new_path, true)
     }
 
     fn delete_file(&self, path: &str) -> FileSystemResult<()> {
-        self.unlink(path, false)
+        self.inner.unlink(path, false)
     }
 
     fn delete_directory(&self, path: &str) -> FileSystemResult<()> {
-        self.unlink(path, true)
+        self.inner.unlink(path, true)
     }
 
     fn open_file<'a>(
@@ -126,10 +140,10 @@ where
     ) -> FileSystemResult<Box<dyn FileOperations + 'a>> {
         // TODO: separate type file operation type with diferent implementation
 
-        let file_entry = self.get_root_directory().open_file(path)?;
+        let file_entry = self.inner.get_root_directory().open_file(path)?;
 
         let res = Box::new(FileInterface {
-            fs: self,
+            fs: &self.inner,
             file_info: file_entry,
             mode,
         });
@@ -190,7 +204,7 @@ where
     }
 
     fn get_file_timestamp_raw(&self, name: &str) -> FileSystemResult<FileTimeStampRaw> {
-        let file_entry = self.get_root_directory().open_file(name)?;
+        let file_entry = self.inner.get_root_directory().open_file(name)?;
 
         let result = FileTimeStampRaw {
             creation_timestamp: file_entry.creation_timestamp,
@@ -226,7 +240,7 @@ where
                 }
             }
 
-            *entry = raw_dir_entry?.into_fs(&self.base_path);
+            *entry = Self::into_fs(raw_dir_entry?, &self.base_path);
         }
 
         // everything was read correctly
@@ -424,7 +438,7 @@ where
                 if self.file_info.start_cluster.0 == 0 || self.file_info.file_size == 0 {
                     None
                 } else {
-                    Some(detail::table::get_last_cluster(
+                    Some(libfat::table::get_last_cluster(
                         self.fs,
                         self.file_info.start_cluster,
                     )?)
@@ -451,7 +465,7 @@ where
 
             while cluster_to_remove_count != 0 {
                 let (last_cluster, previous_cluster) =
-                    detail::table::get_last_and_previous_cluster(
+                    libfat::table::get_last_and_previous_cluster(
                         self.fs,
                         self.file_info.start_cluster,
                     )?;
@@ -476,13 +490,19 @@ where
     }
 }
 
-impl FatDirectoryEntry {
-    fn into_fs(self, base_path: &[u8; DirectoryEntry::PATH_LEN]) -> DirectoryEntry {
+impl<'a, T> DirectoryReader<'a, T>
+where
+    T: BlockDevice,
+{
+    fn into_fs(
+        fat_dir_entry: FatDirectoryEntry,
+        base_path: &[u8; DirectoryEntry::PATH_LEN],
+    ) -> DirectoryEntry {
         let mut path: [u8; DirectoryEntry::PATH_LEN] = [0x0; DirectoryEntry::PATH_LEN];
 
-        let file_size = self.file_size;
+        let file_size = fat_dir_entry.file_size;
 
-        let entry_type = if self.attribute.is_directory() {
+        let entry_type = if fat_dir_entry.attribute.is_directory() {
             DirectoryEntryType::Directory
         } else {
             DirectoryEntryType::File
@@ -500,7 +520,7 @@ impl FatDirectoryEntry {
             base_index += 1;
         }
 
-        for (index, c) in self
+        for (index, c) in fat_dir_entry
             .file_name
             .as_bytes()
             .iter()

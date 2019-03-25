@@ -12,7 +12,6 @@ extern crate bitflags;
 extern crate log;
 
 pub mod block;
-pub mod fat;
 
 use alloc::boxed::Box;
 
@@ -74,43 +73,43 @@ pub struct FileTimeStampRaw {
     pub is_valid: bool,
 }
 
-type Result<T> = core::result::Result<T, FileSystemError>;
+pub type FileSystemResult<T> = core::result::Result<T, FileSystemError>;
 
 pub trait FileOperations {
-    fn read(&mut self, offset: u64, buf: &mut [u8]) -> Result<u64>;
-    fn write(&mut self, offset: u64, buf: &[u8]) -> Result<()>;
+    fn read(&mut self, offset: u64, buf: &mut [u8]) -> FileSystemResult<u64>;
+    fn write(&mut self, offset: u64, buf: &[u8]) -> FileSystemResult<()>;
 
-    fn flush(&mut self) -> Result<()>;
-    fn set_len(&mut self, size: u64) -> Result<()>;
-    fn get_len(&mut self) -> Result<u64>;
+    fn flush(&mut self) -> FileSystemResult<()>;
+    fn set_len(&mut self, size: u64) -> FileSystemResult<()>;
+    fn get_len(&mut self) -> FileSystemResult<u64>;
 }
 
 pub trait DirectoryOperations {
-    fn read(&mut self, buf: &mut [DirectoryEntry]) -> Result<u64>;
-    fn entry_count(&self) -> Result<u64>;
+    fn read(&mut self, buf: &mut [DirectoryEntry]) -> FileSystemResult<u64>;
+    fn entry_count(&self) -> FileSystemResult<u64>;
 }
 
 pub trait FileSystemOperations {
-    fn create_file(&self, path: &str, size: u64) -> Result<()>;
-    fn create_directory(&self, path: &str) -> Result<()>;
+    fn create_file(&self, path: &str, size: u64) -> FileSystemResult<()>;
+    fn create_directory(&self, path: &str) -> FileSystemResult<()>;
 
-    fn rename_file(&self, old_path: &str, new_path: &str) -> Result<()>;
-    fn rename_directory(&self, old_path: &str, new_path: &str) -> Result<()>;
+    fn rename_file(&self, old_path: &str, new_path: &str) -> FileSystemResult<()>;
+    fn rename_directory(&self, old_path: &str, new_path: &str) -> FileSystemResult<()>;
 
-    fn delete_file(&self, path: &str) -> Result<()>;
-    fn delete_directory(&self, path: &str) -> Result<()>;
+    fn delete_file(&self, path: &str) -> FileSystemResult<()>;
+    fn delete_directory(&self, path: &str) -> FileSystemResult<()>;
 
     fn open_file<'a>(
         &'a self,
         path: &str,
         mode: FileModeFlags,
-    ) -> Result<Box<dyn FileOperations + 'a>>;
+    ) -> FileSystemResult<Box<dyn FileOperations + 'a>>;
 
     fn open_directory<'a>(
         &'a self,
         path: &str,
         filter: DirFilterFlags,
-    ) -> Result<Box<dyn DirectoryOperations + 'a>>;
+    ) -> FileSystemResult<Box<dyn DirectoryOperations + 'a>>;
 
-    fn get_file_timestamp_raw(&self, path: &str) -> Result<FileTimeStampRaw>;
+    fn get_file_timestamp_raw(&self, path: &str) -> FileSystemResult<FileTimeStampRaw>;
 }

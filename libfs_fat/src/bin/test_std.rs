@@ -6,8 +6,8 @@ use std::cell::RefCell;
 use std::io::SeekFrom;
 use std::path::Path;
 
-use kfs_libfs::block::*;
-use kfs_libfs::*;
+use libfs::block::*;
+use libfs::*;
 
 #[macro_use]
 extern crate log;
@@ -132,7 +132,7 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap())?;
-    let filesystem = fat::detail::get_raw_partition(system_device).unwrap();
+    let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device).unwrap();
     /*filesystem.delete_file("/TEST/DUDE/HELLO.TXT").unwrap();
     filesystem.delete_directory("/TEST/DUDE").unwrap();
     filesystem.delete_directory("/TEST").unwrap();
@@ -143,11 +143,11 @@ fn main() -> Result<()> {
     print_dir(&filesystem, "/", 0, false);
 
     //filesystem.rename_file("/PRF2SAFE.RCV", "/save/PRF2SAFE.RCV").unwrap();
-    filesystem
+    /*filesystem
         .rename_directory("/save", "/save_backup")
         .unwrap();
     print_dir(&filesystem, "/", 0, false);
-    print_dir(&filesystem, "/save_backup", 0, false);
+    print_dir(&filesystem, "/save_backup", 0, false);*/
     //filesystem.create_file("/hello_world.txt", 42);
     //print_dir(&filesystem, "/", 0, false);
 
