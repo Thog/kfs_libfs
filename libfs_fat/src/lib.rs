@@ -1,5 +1,4 @@
 #![feature(alloc)]
-#![feature(integer_atomics)]
 #![no_std]
 
 extern crate alloc;
@@ -252,6 +251,7 @@ where
     }
 }
 
+// FIXME: All implementation here should be moved to libfat
 impl<'a, T> FileOperations for FileInterface<'a, T>
 where
     T: BlockDevice,

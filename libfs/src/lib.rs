@@ -1,15 +1,10 @@
 #![feature(alloc)]
-#![feature(integer_atomics)]
 #![no_std]
 
-#[macro_use]
 extern crate alloc;
 
 #[macro_use]
 extern crate bitflags;
-
-#[macro_use]
-extern crate log;
 
 pub mod block;
 
