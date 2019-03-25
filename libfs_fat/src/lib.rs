@@ -5,11 +5,8 @@ extern crate alloc;
 
 use alloc::boxed::Box;
 use core::iter::Iterator;
-use libfat::block_iter::BlockIndexClusterIter;
 
-use libfs::block::Block;
 use libfs::block::BlockDevice;
-use libfs::block::BlockIndex;
 
 use libfs::FileSystemResult;
 use libfs::{
