@@ -114,7 +114,7 @@ where
 fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) {
     let mut f = File::create(path).unwrap();
 
-    let mut buffer: [u8; 0x200] = [0x0; 0x200];
+    let mut buffer: [u8; 0x1] = [0x0; 0x1];
     let mut offset = 0;
 
     loop {
@@ -141,6 +141,9 @@ fn main() -> Result<()> {
     filesystem.create_file("/TEST/DUDE/HELLO.TXT", 42).unwrap();*/
     //filesystem.delete_file("/hello_world.txt");
     print_dir(&filesystem, "/", 0, false);
+
+    let mut file = filesystem.open_file("/PRF2SAFE.RCV", FileModeFlags::READABLE).unwrap();
+    dump_to_file(&mut file, "PRF2SAFE.RCV");
 
     //filesystem.rename_file("/PRF2SAFE.RCV", "/save/PRF2SAFE.RCV").unwrap();
     /*filesystem
