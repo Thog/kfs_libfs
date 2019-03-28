@@ -235,7 +235,7 @@ where
                 }
             }
 
-            *entry = Self::into_fs(raw_dir_entry?, &self.base_path);
+            *entry = Self::convert_entry(raw_dir_entry?, &self.base_path);
         }
 
         // everything was read correctly
@@ -289,7 +289,7 @@ impl<'a, T> DirectoryReader<'a, T>
 where
     T: BlockDevice,
 {
-    fn into_fs(
+    fn convert_entry(
         fat_dir_entry: FatDirectoryEntry,
         base_path: &[u8; DirectoryEntry::PATH_LEN],
     ) -> DirectoryEntry {
