@@ -1,3 +1,4 @@
+//! libfs compatibility layer arround libfat.
 #![feature(alloc)]
 #![no_std]
 
@@ -17,26 +18,45 @@ use libfs::{
 use libfat::directory::dir_entry::DirectoryEntry as FatDirectoryEntry;
 use libfat::directory::dir_entry_iterator::DirectoryEntryIterator as FatDirectoryEntryIterator;
 
+/// A libfat directory reader implementing ``DirectoryOperations``.
 struct DirectoryReader<'a, T> {
+    /// The opened directory path. Used to get the complete path of every entries.
     base_path: [u8; DirectoryEntry::PATH_LEN],
+
+    /// The iterator used to iter over libfat's directory entries.
     internal_iter: FatDirectoryEntryIterator<'a, T>,
+
+    /// The filter required by the user.
     filter_fn: &'static dyn Fn(&FileSystemResult<FatDirectoryEntry>) -> bool,
+
+    /// The number of entries in the directory after ``filter_fn``.
     entry_count: u64,
 }
 
+/// A libfat file interface implementing ``FileOperations``.
 struct FileInterface<'a, T> {
+    /// Internal interface to libfat's filesystem.
     fs: &'a libfat::filesystem::FatFileSystem<T>,
+
+    /// The libfat's directory entry of this file.
     file_info: FatDirectoryEntry,
+
+    /// The flags applied to the given file.
     mode: FileModeFlags,
 }
 
+/// A wrapper arround libfat ``FatFileSystem`` implementing ``FileSystemOperations``.
 pub struct FatFileSystem<T> {
+    /// libfat filesystem interface.
     inner: libfat::filesystem::FatFileSystem<T>,
 }
 
+/// Predicate helper used to filter directory entries.
 struct DirectoryFilterPredicate;
 
 impl DirectoryFilterPredicate {
+
+    /// Accept all entries except "." & "..".
     fn all(entry: &FileSystemResult<FatDirectoryEntry>) -> bool {
         if entry.is_err() {
             return false;
@@ -50,6 +70,7 @@ impl DirectoryFilterPredicate {
         }
     }
 
+    /// Only accept directory entries.
     fn dirs(entry: &FileSystemResult<FatDirectoryEntry>) -> bool {
         if entry.is_err() {
             return false;
@@ -62,6 +83,7 @@ impl DirectoryFilterPredicate {
         }
     }
 
+    /// Only accept file entries.
     fn files(entry: &FileSystemResult<FatDirectoryEntry>) -> bool {
         if entry.is_err() {
             return false;
@@ -79,6 +101,7 @@ impl<B> FatFileSystem<B>
 where
     B: BlockDevice,
 {
+    /// Helper used to open a directory using the root directory.
     fn get_dir_from_path(
         &self,
         path: &str,
@@ -90,6 +113,7 @@ where
         }
     }
 
+    /// Open the given block device as a FAT filesystem.
     pub fn get_raw_partition(block_device: B) -> FileSystemResult<Self> {
         let inner_fs = libfat::get_raw_partition(block_device)?;
 
@@ -289,6 +313,7 @@ impl<'a, T> DirectoryReader<'a, T>
 where
     T: BlockDevice,
 {
+    /// convert libfat's DirectoryEntry to libfs's DirectoryEntry.
     fn convert_entry(
         fat_dir_entry: FatDirectoryEntry,
         base_path: &[u8; DirectoryEntry::PATH_LEN],

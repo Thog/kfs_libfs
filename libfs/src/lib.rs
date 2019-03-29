@@ -2,9 +2,6 @@
 #![feature(alloc)]
 #![no_std]
 
-#![warn(clippy::cast_possible_wrap, clippy::cast_sign_loss, clippy::default_trait_access, clippy::explicit_into_iter_loop, clippy::explicit_iter_loop, clippy::missing_docs_in_private_items, clippy::mut_mut, clippy::replace_consts, clippy::used_underscore_binding, clippy::wildcard_dependencies, clippy::wrong_pub_self_convention)]
-
-
 extern crate alloc;
 
 #[macro_use]
@@ -112,7 +109,7 @@ bitflags! {
     }
 }
 
-/// Represent the attached timestamp on a given resource.
+/// Represent the attached timestamps on a given resource.
 #[derive(Debug)]
 pub struct FileTimeStampRaw {
     /// The resource creation UNIX timestamp.
@@ -163,26 +160,38 @@ pub trait DirectoryOperations {
 
 /// Represent the operation on a filesystem.
 pub trait FileSystemOperations {
+    /// Create a file with a given ``size`` at the specified ``path``.
     fn create_file(&self, path: &str, size: u64) -> FileSystemResult<()>;
+
+    /// Create a directory at the specified ``path``.
     fn create_directory(&self, path: &str) -> FileSystemResult<()>;
 
+    /// Rename a file at ``old_path`` into ``new_path``.
     fn rename_file(&self, old_path: &str, new_path: &str) -> FileSystemResult<()>;
+
+    /// Rename a directory at ``old_path`` into ``new_path``
     fn rename_directory(&self, old_path: &str, new_path: &str) -> FileSystemResult<()>;
 
+    /// Delete a file at the specified ``path``.
     fn delete_file(&self, path: &str) -> FileSystemResult<()>;
+
+    /// Delete a directory at the specified ``path``.
     fn delete_directory(&self, path: &str) -> FileSystemResult<()>;
 
+    /// Open a file at the specified ``path`` with the given ``mode`` flags.
     fn open_file<'a>(
         &'a self,
         path: &str,
         mode: FileModeFlags,
     ) -> FileSystemResult<Box<dyn FileOperations + 'a>>;
 
+    /// Open a directory at the specified ``path`` with the given ``mode`` flags.
     fn open_directory<'a>(
         &'a self,
         path: &str,
         filter: DirFilterFlags,
     ) -> FileSystemResult<Box<dyn DirectoryOperations + 'a>>;
 
+    /// Return the attached timestamps on a resource at the given ``path``.
     fn get_file_timestamp_raw(&self, path: &str) -> FileSystemResult<FileTimeStampRaw>;
 }
