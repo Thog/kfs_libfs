@@ -77,8 +77,7 @@ fn print_dir<T>(filesystem: &T, path: &str, level: u32, recursive: bool) -> File
 where
     T: FileSystemOperations,
 {
-    let mut root_dir = filesystem
-        .open_directory(path, DirFilterFlags::ALL)?;
+    let mut root_dir = filesystem.open_directory(path, DirFilterFlags::ALL)?;
 
     let mut entries: [DirectoryEntry; 1] = [DirectoryEntry {
         path: [0x0; DirectoryEntry::PATH_LEN],

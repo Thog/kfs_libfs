@@ -55,7 +55,6 @@ pub struct FatFileSystem<T> {
 struct DirectoryFilterPredicate;
 
 impl DirectoryFilterPredicate {
-
     /// Accept all entries except "." & "..".
     fn all(entry: &FileSystemResult<FatDirectoryEntry>) -> bool {
         if entry.is_err() {
@@ -288,7 +287,12 @@ where
             return Err(FileSystemError::AccessDenied);
         }
 
-        self.file_info.write(self.fs, offset, buf, (self.mode & FileModeFlags::APPENDABLE) == FileModeFlags::APPENDABLE)
+        self.file_info.write(
+            self.fs,
+            offset,
+            buf,
+            (self.mode & FileModeFlags::APPENDABLE) == FileModeFlags::APPENDABLE,
+        )
     }
 
     fn flush(&mut self) -> FileSystemResult<()> {
