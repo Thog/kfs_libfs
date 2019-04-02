@@ -126,10 +126,14 @@ pub trait BlockDevice: Sized {
 ///
 /// When a CachedBlockDevice is dropped, it flushes its cache.
 pub struct CachedBlockDevice<B: BlockDevice> {
+    /// The inner block device.
     block_device: B,
+
+    /// The LRU cache.
     lru_cache: Mutex<LruCache<BlockIndex, CachedBlock>>
 }
 
+/// Represent a cached block in the LRU cache.
 struct CachedBlock {
     /// Bool indicating whether this block should be written to device when flushing.
     dirty: bool,
