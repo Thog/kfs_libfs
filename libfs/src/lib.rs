@@ -51,7 +51,7 @@ pub enum FileSystemError {
     /// Represent a custom error.
     Custom {
         /// The name of the custom error.
-        name: &'static str
+        name: &'static str,
     },
 }
 
@@ -100,10 +100,10 @@ bitflags! {
     pub struct DirFilterFlags: u32 {
         /// Accept directories.
         const DIRECTORY = 0b0000_0001;
-        
+
         /// Accept files.
         const FILE = 0b0000_0010;
-        
+
         /// Do not filter anything.
         const ALL = Self::DIRECTORY.bits | Self::FILE.bits;
     }
