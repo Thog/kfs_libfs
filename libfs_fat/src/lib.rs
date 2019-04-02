@@ -156,8 +156,6 @@ where
         path: &str,
         mode: FileModeFlags,
     ) -> FileSystemResult<Box<dyn FileOperations + 'a>> {
-        // TODO: separate type file operation type with diferent implementation
-
         let file_entry = self.inner.get_root_directory().open_file(path)?;
 
         let res = Box::new(FileInterface {
