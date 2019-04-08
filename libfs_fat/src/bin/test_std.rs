@@ -68,8 +68,8 @@ impl BlockDevice for LinuxBlockDevice {
     }
 
     fn count(&self) -> BlockResult<BlockCount> {
-        let num_blocks = self.file.borrow().metadata().unwrap().len() / (Block::LEN as u64);
-        Ok(BlockCount(num_blocks as u32))
+        let num_blocks = self.file.borrow().metadata().unwrap().len() / (Block::LEN_U64);
+        Ok(BlockCount(num_blocks))
     }
 }
 
@@ -135,6 +135,6 @@ fn main() -> FileSystemResult<()> {
     let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap();
     let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device)?;
 
-    print_dir(&filesystem, "/", 0, true)?;
+    print_dir(&filesystem, "/Contents", 0, true)?;
     Ok(())
 }

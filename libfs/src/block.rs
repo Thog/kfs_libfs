@@ -26,18 +26,18 @@ pub struct Block {
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 /// Represent the position of a block on a block device.
-pub struct BlockIndex(pub u32);
+pub struct BlockIndex(pub u64);
 
 #[derive(Debug, Copy, Clone)]
 /// Represent the count of blocks that a block device hold.
-pub struct BlockCount(pub u32);
+pub struct BlockCount(pub u64);
 
 impl Block {
     /// The size of a block in bytes.
     pub const LEN: usize = 512;
 
-    /// The size of a block in bytes as a 32 bits unsigned value.
-    pub const LEN_U32: u32 = Self::LEN as u32;
+    /// The size of a block in bytes as a 64 bits unsigned value.
+    pub const LEN_U64: u64 = Self::LEN as u64;
 
     /// Create a new block instance.
     pub fn new() -> Block {
@@ -189,7 +189,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
         } else {
             // check each block is found in the cache
             for i in 0..blocks.len() {
-                if !lru.contains(&BlockIndex(index.0 + i as u32)) {
+                if !lru.contains(&BlockIndex(index.0 + i as u64)) {
                     fully_cached = false;
                     break;
                 }
@@ -203,7 +203,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
 
         // update from/to cache
         for (i, block) in blocks.iter_mut().enumerate() {
-            if let Some(cached_block) = lru.get(&BlockIndex(index.0 + i as u32)) {
+            if let Some(cached_block) = lru.get(&BlockIndex(index.0 + i as u64)) {
                 // block was found in cache, its access time was updated.
                 if fully_cached || cached_block.dirty {
                     // fully_cached: block[i] is uninitialized, copy it from cache.
@@ -225,7 +225,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
                     dirty: false,
                     data: block.clone(),
                 };
-                lru.put(BlockIndex(index.0 + i as u32), new_cached_block);
+                lru.put(BlockIndex(index.0 + i as u64), new_cached_block);
             }
         }
         Ok(())
@@ -255,7 +255,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
                             .raw_write(core::slice::from_ref(&evicted_block.data), evicted_index)?;
                     }
                 }
-                lru.put(BlockIndex(index.0 + i as u32), new_block);
+                lru.put(BlockIndex(index.0 + i as u64), new_block);
             }
         } else {
             // we're performing a big write, that will evict all cache blocks.
@@ -263,7 +263,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
             for (evicted_index, evicted_block) in lru.iter() {
                 if evicted_block.dirty
                     // if evicted block is `blocks`, don't bother writing it as we're about to re-write it anyway.
-                    && !(index >= *evicted_index && index < BlockIndex(evicted_index.0 + blocks.len() as u32))
+                    && !(index >= *evicted_index && index < BlockIndex(evicted_index.0 + blocks.len() as u64))
                 {
                     self.block_device
                         .raw_write(core::slice::from_ref(&evicted_block.data), *evicted_index)?;
@@ -274,7 +274,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
             // add first `cap` blocks to cache
             for (i, block) in blocks.iter().take(lru.cap()).enumerate() {
                 lru.put(
-                    BlockIndex(index.0 + i as u32),
+                    BlockIndex(index.0 + i as u64),
                     CachedBlock {
                         dirty: false,
                         data: block.clone(),
