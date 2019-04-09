@@ -96,8 +96,7 @@ impl DirectoryFilterPredicate {
     }
 }
 
-impl<S: StorageDevice> FatFileSystem<S>
-{
+impl<S: StorageDevice> FatFileSystem<S> {
     /// Helper used to open a directory using the root directory.
     fn get_dir_from_path(
         &self,
@@ -118,8 +117,7 @@ impl<S: StorageDevice> FatFileSystem<S>
     }
 }
 
-impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S>
-{
+impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
     fn create_file(&self, path: &str, size: u64) -> FileSystemResult<()> {
         self.inner.touch(path)?;
 
@@ -229,8 +227,7 @@ impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S>
     }
 }
 
-impl<'a, S: StorageDevice> DirectoryOperations for DirectoryReader<'a, S>
-{
+impl<'a, S: StorageDevice> DirectoryOperations for DirectoryReader<'a, S> {
     fn read(&mut self, buf: &mut [DirectoryEntry]) -> FileSystemResult<u64> {
         for (index, entry) in buf.iter_mut().enumerate() {
             let mut raw_dir_entry;
@@ -262,8 +259,7 @@ impl<'a, S: StorageDevice> DirectoryOperations for DirectoryReader<'a, S>
     }
 }
 
-impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S>
-{
+impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S> {
     fn read(&mut self, offset: u64, buf: &mut [u8]) -> FileSystemResult<u64> {
         if (self.mode & FileModeFlags::READABLE) != FileModeFlags::READABLE {
             return Err(FileSystemError::AccessDenied);
@@ -303,8 +299,7 @@ impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S>
     }
 }
 
-impl<'a, S: StorageDevice> DirectoryReader<'a, S>
-{
+impl<'a, S: StorageDevice> DirectoryReader<'a, S> {
     /// convert libfat's DirectoryEntry to libfs's DirectoryEntry.
     fn convert_entry(
         fat_dir_entry: FatDirectoryEntry,

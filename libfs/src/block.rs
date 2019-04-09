@@ -81,14 +81,14 @@ impl core::ops::DerefMut for Block {
 impl BlockIndex {
     /// Convert the block index into an offset in bytes.
     pub fn into_offset(self) -> u64 {
-        u64::from(self.0) * (Block::LEN as u64)
+        self.0 * Block::LEN_U64
     }
 }
 
 impl BlockCount {
     /// Convert the block count into a size in bytes.
     pub fn into_size(self) -> u64 {
-        u64::from(self.0) * (Block::LEN as u64)
+        self.0 * Block::LEN_U64
     }
 }
 
@@ -320,9 +320,7 @@ pub struct StorageBlockDevice<B: BlockDevice> {
 impl<B: BlockDevice> StorageBlockDevice<B> {
     /// Create a new storage block device
     pub fn new(block_device: B) -> Self {
-        StorageBlockDevice {
-            block_device
-        }
+        StorageBlockDevice { block_device }
     }
 }
 

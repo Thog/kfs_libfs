@@ -133,7 +133,8 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) -> File
 fn main() -> FileSystemResult<()> {
     env_logger::init();
 
-    let system_device = StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
+    let system_device =
+        StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
     let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device)?;
 
     print_dir(&filesystem, "/", 0, false)?;
