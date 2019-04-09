@@ -7,6 +7,7 @@ use std::io::SeekFrom;
 use std::path::Path;
 
 use libfs::block::*;
+use libfs::storage::*;
 use libfs::*;
 
 #[macro_use]
@@ -132,9 +133,9 @@ fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) -> File
 fn main() -> FileSystemResult<()> {
     env_logger::init();
 
-    let system_device = LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap();
+    let system_device = StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
     let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device)?;
 
-    print_dir(&filesystem, "/Contents", 0, true)?;
+    print_dir(&filesystem, "/", 0, true)?;
     Ok(())
 }

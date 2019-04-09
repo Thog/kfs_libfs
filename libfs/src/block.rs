@@ -317,8 +317,17 @@ pub struct StorageBlockDevice<B: BlockDevice> {
     block_device: B,
 }
 
+impl<B: BlockDevice> StorageBlockDevice<B> {
+    /// Create a new storage block device
+    pub fn new(block_device: B) -> Self {
+        StorageBlockDevice {
+            block_device
+        }
+    }
+}
+
 impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
-    fn read(&mut self, offset: u64, buf: &mut [u8]) -> StorageDeviceResult<()> {
+    fn read(&self, offset: u64, buf: &mut [u8]) -> StorageDeviceResult<()> {
         let mut read_size = 0u64;
         let mut blocks = [Block::new()];
 
@@ -358,7 +367,7 @@ impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
         Ok(())
     }
 
-    fn write(&mut self, offset: u64, buf: &[u8]) -> StorageDeviceResult<()> {
+    fn write(&self, offset: u64, buf: &[u8]) -> StorageDeviceResult<()> {
         let mut write_size = 0u64;
         let mut blocks = [Block::new()];
 

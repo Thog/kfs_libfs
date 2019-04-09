@@ -7,7 +7,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::iter::Iterator;
 
-use libfs::block::BlockDevice;
+use libfs::storage::StorageDevice;
 
 use libfs::FileSystemResult;
 use libfs::{
@@ -19,12 +19,12 @@ use libfat::directory::dir_entry::DirectoryEntry as FatDirectoryEntry;
 use libfat::directory::dir_entry_iterator::DirectoryEntryIterator as FatDirectoryEntryIterator;
 
 /// A libfat directory reader implementing ``DirectoryOperations``.
-struct DirectoryReader<'a, T> {
+struct DirectoryReader<'a, S: StorageDevice> {
     /// The opened directory path. Used to get the complete path of every entries.
     base_path: [u8; DirectoryEntry::PATH_LEN],
 
     /// The iterator used to iter over libfat's directory entries.
-    internal_iter: FatDirectoryEntryIterator<'a, T>,
+    internal_iter: FatDirectoryEntryIterator<'a, S>,
 
     /// The filter required by the user.
     filter_fn: &'static dyn Fn(&FileSystemResult<FatDirectoryEntry>) -> bool,
@@ -34,9 +34,9 @@ struct DirectoryReader<'a, T> {
 }
 
 /// A libfat file interface implementing ``FileOperations``.
-struct FileInterface<'a, T> {
+struct FileInterface<'a, S: StorageDevice> {
     /// Internal interface to libfat's filesystem.
-    fs: &'a libfat::filesystem::FatFileSystem<T>,
+    fs: &'a libfat::filesystem::FatFileSystem<S>,
 
     /// The libfat's directory entry of this file.
     file_info: FatDirectoryEntry,
@@ -46,9 +46,9 @@ struct FileInterface<'a, T> {
 }
 
 /// A wrapper arround libfat ``FatFileSystem`` implementing ``FileSystemOperations``.
-pub struct FatFileSystem<T> {
+pub struct FatFileSystem<S: StorageDevice> {
     /// libfat filesystem interface.
-    inner: libfat::filesystem::FatFileSystem<T>,
+    inner: libfat::filesystem::FatFileSystem<S>,
 }
 
 /// Predicate helper used to filter directory entries.
@@ -96,15 +96,13 @@ impl DirectoryFilterPredicate {
     }
 }
 
-impl<B> FatFileSystem<B>
-where
-    B: BlockDevice,
+impl<S: StorageDevice> FatFileSystem<S>
 {
     /// Helper used to open a directory using the root directory.
     fn get_dir_from_path(
         &self,
         path: &str,
-    ) -> FileSystemResult<libfat::directory::Directory<'_, B>> {
+    ) -> FileSystemResult<libfat::directory::Directory<'_, S>> {
         if path == "/" {
             Ok(self.inner.get_root_directory())
         } else {
@@ -113,16 +111,14 @@ where
     }
 
     /// Open the given block device as a FAT filesystem.
-    pub fn get_raw_partition(block_device: B) -> FileSystemResult<Self> {
+    pub fn get_raw_partition(block_device: S) -> FileSystemResult<Self> {
         let inner_fs = libfat::get_raw_partition(block_device)?;
 
         Ok(FatFileSystem { inner: inner_fs })
     }
 }
 
-impl<B> FileSystemOperations for FatFileSystem<B>
-where
-    B: BlockDevice,
+impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S>
 {
     fn create_file(&self, path: &str, size: u64) -> FileSystemResult<()> {
         self.inner.touch(path)?;
@@ -233,9 +229,7 @@ where
     }
 }
 
-impl<'a, T> DirectoryOperations for DirectoryReader<'a, T>
-where
-    T: BlockDevice,
+impl<'a, S: StorageDevice> DirectoryOperations for DirectoryReader<'a, S>
 {
     fn read(&mut self, buf: &mut [DirectoryEntry]) -> FileSystemResult<u64> {
         for (index, entry) in buf.iter_mut().enumerate() {
@@ -268,9 +262,7 @@ where
     }
 }
 
-impl<'a, T> FileOperations for FileInterface<'a, T>
-where
-    T: BlockDevice,
+impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S>
 {
     fn read(&mut self, offset: u64, buf: &mut [u8]) -> FileSystemResult<u64> {
         if (self.mode & FileModeFlags::READABLE) != FileModeFlags::READABLE {
@@ -311,9 +303,7 @@ where
     }
 }
 
-impl<'a, T> DirectoryReader<'a, T>
-where
-    T: BlockDevice,
+impl<'a, S: StorageDevice> DirectoryReader<'a, S>
 {
     /// convert libfat's DirectoryEntry to libfs's DirectoryEntry.
     fn convert_entry(
