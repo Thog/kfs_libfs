@@ -32,6 +32,13 @@ pub struct BlockIndex(pub u64);
 /// Represent the count of blocks that a block device hold.
 pub struct BlockCount(pub u64);
 
+impl BlockCount {
+    /// Get the block count as a raw bytes count.
+    pub fn into_bytes_count(self) -> u64 {
+        self.0 * Block::LEN_U64
+    }
+}
+
 impl Block {
     /// The size of a block in bytes.
     pub const LEN: usize = 512;
@@ -287,5 +294,116 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
 
     fn count(&self) -> BlockResult<BlockCount> {
         self.block_device.count()
+    }
+}
+
+use crate::storage::StorageDevice;
+use crate::storage::StorageDeviceError;
+use crate::storage::StorageDeviceResult;
+
+impl From<BlockError> for StorageDeviceError {
+    fn from(error: BlockError) -> Self {
+        match error {
+            BlockError::ReadError => StorageDeviceError::ReadError,
+            BlockError::WriteError => StorageDeviceError::WriteError,
+            BlockError::Unknown => StorageDeviceError::Unknown,
+        }
+    }
+}
+
+/// Implementation of storage device for block device
+pub struct StorageBlockDevice<B: BlockDevice> {
+    /// The inner block device.
+    block_device: B,
+}
+
+impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
+    fn read(&mut self, offset: u64, buf: &mut [u8]) -> StorageDeviceResult<()> {
+        let mut read_size = 0u64;
+        let mut blocks = [Block::new()];
+
+        while read_size < buf.len() as u64 {
+            // Compute the next offset of the data to read.
+            let current_offset = offset + read_size;
+
+            // Extract the block index containing the data.
+            let current_block_index = BlockIndex(current_offset / Block::LEN_U64);
+
+            // Extract the offset inside the block containing the data.
+            let current_block_offset = current_offset % Block::LEN_U64;
+
+            // Read the block.
+            self.block_device
+                .raw_read(&mut blocks, BlockIndex(current_block_index.0))?;
+
+            // Slice on the part of the buffer we need.
+            let buf_slice = &mut buf[read_size as usize..];
+
+            // Limit copy to the size of a block or lower
+            let buf_limit = if buf_slice.len() >= Block::LEN {
+                Block::LEN
+            } else {
+                buf_slice.len()
+            };
+
+            // Copy the data into the buffer.
+            for (index, buf_entry) in buf_slice.iter_mut().take(buf_limit).enumerate() {
+                *buf_entry = blocks[0][current_block_offset as usize + index];
+            }
+
+            // Increment with what we read.
+            read_size += buf_limit as u64;
+        }
+
+        Ok(())
+    }
+
+    fn write(&mut self, offset: u64, buf: &[u8]) -> StorageDeviceResult<()> {
+        let mut write_size = 0u64;
+        let mut blocks = [Block::new()];
+
+        while write_size < buf.len() as u64 {
+            // Compute the next offset of the data to write.
+            let current_offset = offset + write_size;
+
+            // Extract the block index containing the data.
+            let current_block_index = BlockIndex(current_offset / Block::LEN_U64);
+
+            // Extract the offset inside the block containing the data.
+            let current_block_offset = current_offset % Block::LEN_U64;
+
+            // Read the block.
+            self.block_device
+                .raw_read(&mut blocks, BlockIndex(current_block_index.0))?;
+
+            // Slice on the part of the buffer we need.
+            let buf_slice = &buf[write_size as usize..];
+
+            // Limit copy to the size of a block or lower
+            let buf_limit = if buf_slice.len() >= Block::LEN {
+                Block::LEN
+            } else {
+                buf_slice.len()
+            };
+
+            let block_slice = &mut blocks[0][current_block_offset as usize..];
+
+            // Copy the data from the buffer.
+            for (index, buf_entry) in block_slice.iter_mut().take(buf_limit).enumerate() {
+                *buf_entry = buf_slice[index];
+            }
+
+            self.block_device
+                .raw_write(&blocks, BlockIndex(current_block_index.0))?;
+
+            // Increment with what we wrote.
+            write_size += buf_limit as u64;
+        }
+
+        Ok(())
+    }
+
+    fn len(&self) -> StorageDeviceResult<u64> {
+        Ok(self.block_device.count()?.into_bytes_count())
     }
 }

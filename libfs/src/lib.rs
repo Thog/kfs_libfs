@@ -7,8 +7,11 @@ extern crate alloc;
 #[macro_use]
 extern crate bitflags;
 
-/// I/O driver representation.
+/// I/O block driver representation.
 pub mod block;
+
+/// I/O driver representation.
+pub mod storage;
 
 use alloc::boxed::Box;
 
@@ -24,10 +27,10 @@ pub enum FileSystemError {
     /// The access to a given resource has been denied.
     AccessDenied,
 
-    /// A writing operation failed on the attached device block.
+    /// A writing operation failed on the attached storage device.
     WriteFailed,
 
-    /// A read operation failed on the attached device block.
+    /// A read operation failed on the attached storage device.
     ReadFailed,
 
     /// The given partition cannot be found.
