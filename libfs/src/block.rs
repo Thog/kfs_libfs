@@ -349,8 +349,8 @@ impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
             let buf_slice = &mut buf[read_size as usize..];
 
             // Limit copy to the size of a block or lower
-            let buf_limit = if buf_slice.len() >= Block::LEN {
-                Block::LEN
+            let buf_limit = if buf_slice.len() + current_block_offset as usize >= Block::LEN {
+                Block::LEN - current_block_offset as usize
             } else {
                 buf_slice.len()
             };
@@ -389,8 +389,8 @@ impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
             let buf_slice = &buf[write_size as usize..];
 
             // Limit copy to the size of a block or lower
-            let buf_limit = if buf_slice.len() >= Block::LEN {
-                Block::LEN
+            let buf_limit = if buf_slice.len() + current_block_offset as usize >= Block::LEN {
+                Block::LEN - current_block_offset as usize
             } else {
                 buf_slice.len()
             };
