@@ -136,6 +136,10 @@ fn main() -> FileSystemResult<()> {
     let system_device = StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
     let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device)?;
 
-    print_dir(&filesystem, "/", 0, true)?;
+    print_dir(&filesystem, "/", 0, false)?;
+
+    filesystem.rename_directory("/save", "/this_is_a_long_name")?;
+
+    print_dir(&filesystem, "/", 0, false)?;
     Ok(())
 }
