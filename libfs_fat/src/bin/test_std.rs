@@ -170,16 +170,17 @@ fn main() -> FileSystemResult<()> {
         StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
     let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device)?;
 
-    print_dir(&filesystem, "/", 0, false)?;
+    print_dir(&filesystem, "/", 0, true)?;
 
     //filesystem.create_file("/hello_world.txt", 0)?;
 
-    let mut file = filesystem.open_file(
+    /*let mut file = filesystem.open_file(
         "/hello_world.txt",
         FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
-    )?;
-    dump_to_filesystem(&mut file, "PRF2SAFE.RCV")?;
-    dump_to_file(&mut file, "hello_world.txt")?;
+    )?*/
+;
+    //dump_to_filesystem(&mut file, "PRF2SAFE.RCV")?;
+    //dump_to_file(&mut file, "hello_world.txt")?;
 
     //filesystem.rename_directory("/save", "/this_is_a_long_name")?;
 
