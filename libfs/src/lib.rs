@@ -12,6 +12,9 @@ use alloc::boxed::Box;
 /// Represent a filesystem error.
 #[derive(Debug)]
 pub enum FileSystemError {
+    /// Unknown error.
+    Unknown,
+
     /// The given resource couldn't be found.
     NotFound,
 
@@ -44,12 +47,6 @@ pub enum FileSystemError {
 
     /// The partition wasn't used as it's invalid.
     InvalidPartition,
-
-    /// Represent a custom error.
-    Custom {
-        /// The name of the custom error.
-        name: &'static str,
-    },
 }
 
 /// Represent the type of a given resource when walking a directory.
