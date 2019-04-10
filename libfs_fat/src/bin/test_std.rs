@@ -114,17 +114,51 @@ where
 fn dump_to_file<'a>(file: &mut Box<dyn FileOperations + 'a>, path: &str) -> FileSystemResult<()> {
     let mut f = File::create(path).unwrap();
 
-    let mut buffer: [u8; 0x200] = [0x0; 0x200];
+    let file_len = file.get_len()?;
+
+    let mut buffer = Vec::new();
+    buffer.resize(file_len as usize, 0u8);
+
+    let read_size = file.read(0, &mut buffer)? as usize;
+    f.write_all(&buffer[0..read_size]).unwrap();
+
+    Ok(())
+}
+
+fn dump_to_file_buffered<'a>(
+    file: &mut Box<dyn FileOperations + 'a>,
+    path: &str,
+    buffer: &mut [u8],
+) -> FileSystemResult<()> {
+    let mut f = File::create(path).unwrap();
+
     let mut offset = 0;
 
     loop {
-        let read_size = file.read(offset as u64, &mut buffer)? as usize;
+        let read_size = file.read(offset as u64, buffer)? as usize;
         f.write_all(&buffer[0..read_size]).unwrap();
         if read_size == 0 {
             break;
         }
         offset += read_size;
     }
+
+    Ok(())
+}
+
+fn dump_to_filesystem<'a>(
+    file: &mut Box<dyn FileOperations + 'a>,
+    path: &str,
+) -> FileSystemResult<()> {
+    let mut f = OpenOptions::new()
+        .read(true)
+        .write(false)
+        .open(path)
+        .unwrap();
+
+    let mut base_buffer = Vec::new();
+    f.read_to_end(&mut base_buffer).unwrap();
+    file.write(0 as u64, &base_buffer)?;
 
     Ok(())
 }
@@ -138,8 +172,17 @@ fn main() -> FileSystemResult<()> {
 
     print_dir(&filesystem, "/", 0, false)?;
 
-    filesystem.rename_directory("/save", "/this_is_a_long_name")?;
+    //filesystem.create_file("/hello_world.txt", 0)?;
 
-    print_dir(&filesystem, "/", 0, false)?;
+    let mut file = filesystem.open_file(
+        "/hello_world.txt",
+        FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
+    )?;
+    dump_to_filesystem(&mut file, "PRF2SAFE.RCV")?;
+    dump_to_file(&mut file, "hello_world.txt")?;
+
+    //filesystem.rename_directory("/save", "/this_is_a_long_name")?;
+
+    //print_dir(&filesystem, "/", 0, false)?;
     Ok(())
 }
