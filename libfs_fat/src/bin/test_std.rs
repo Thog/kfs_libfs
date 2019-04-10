@@ -172,17 +172,11 @@ fn main() -> FileSystemResult<()> {
 
     print_dir(&filesystem, "/", 0, true)?;
 
-    //filesystem.create_file("/hello_world.txt", 0)?;
-
-    /*let mut file = filesystem.open_file(
-        "/hello_world.txt",
+    let mut file = filesystem.open_file(
+        "/README.md",
         FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
-    )?*/
-;
-    //dump_to_filesystem(&mut file, "PRF2SAFE.RCV")?;
-    //dump_to_file(&mut file, "hello_world.txt")?;
-
-    //filesystem.rename_directory("/save", "/this_is_a_long_name")?;
+    )?;
+    dump_to_file(&mut file, "README.md")?;
 
     //print_dir(&filesystem, "/", 0, false)?;
     Ok(())
