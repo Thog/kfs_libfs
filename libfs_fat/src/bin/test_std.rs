@@ -7,7 +7,6 @@ use std::io::SeekFrom;
 use std::path::Path;
 
 use libfs::block::*;
-use libfs::storage::*;
 use libfs::*;
 
 #[macro_use]

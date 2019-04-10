@@ -109,9 +109,9 @@ impl<S: StorageDevice> FatFileSystem<S> {
         }
     }
 
-    /// Open the given block device as a FAT filesystem.
-    pub fn get_raw_partition(block_device: S) -> FileSystemResult<Self> {
-        let inner_fs = libfat::get_raw_partition(block_device)?;
+    /// Open the given storage device as a FAT filesystem.
+    pub fn get_raw_partition(storage_device: S) -> FileSystemResult<Self> {
+        let inner_fs = libfat::get_raw_partition(storage_device)?;
 
         Ok(FatFileSystem { inner: inner_fs })
     }
