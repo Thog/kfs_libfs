@@ -89,6 +89,7 @@ dependencies = [
  "libfs 0.1.0",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "storage_device 1.0.0",
  "structview 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -97,8 +98,6 @@ name = "libfs"
 version = "0.1.0"
 dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "lru 0.1.13 (git+https://github.com/Orycterope/lru-rs)",
- "spin 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -109,6 +108,7 @@ dependencies = [
  "libfat 0.1.0",
  "libfs 0.1.0",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "storage_device 1.0.0",
 ]
 
 [[package]]
@@ -205,6 +205,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "spin"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "storage_device"
+version = "1.0.0"
+dependencies = [
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lru 0.1.13 (git+https://github.com/Orycterope/lru-rs)",
+ "spin 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "structview"

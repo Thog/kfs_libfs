@@ -3,5 +3,6 @@
 members = [
     "libfs",
     "libfat",
+    "storage_device",
     "libfs_fat"
 ]

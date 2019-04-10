@@ -7,12 +7,6 @@ extern crate alloc;
 #[macro_use]
 extern crate bitflags;
 
-/// I/O block driver representation.
-pub mod block;
-
-/// I/O driver representation.
-pub mod storage;
-
 use alloc::boxed::Box;
 
 /// Represent a filesystem error.

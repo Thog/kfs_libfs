@@ -1,0 +1,10 @@
+[package]
+name = "storage_device"
+version = "1.0.0"
+authors = ["Thog <me@thog.eu>", "orycterope <tvermeilh@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+bitflags = "1.0"
+lru = { git = "https://github.com/Orycterope/lru-rs" }
+spin = "0.5.0"

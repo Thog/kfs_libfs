@@ -6,8 +6,8 @@ use std::cell::RefCell;
 use std::io::SeekFrom;
 use std::path::Path;
 
-use libfs::block::*;
 use libfs::*;
+use storage_device::*;
 
 #[macro_use]
 extern crate log;

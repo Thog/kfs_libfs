@@ -7,7 +7,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use core::iter::Iterator;
 
-use libfs::storage::StorageDevice;
+use storage_device::StorageDevice;
 
 use libfs::FileSystemResult;
 use libfs::{
