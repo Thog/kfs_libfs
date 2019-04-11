@@ -17,8 +17,13 @@ use libfs::{
 
 use libfat::directory::dir_entry::DirectoryEntry as FatDirectoryEntry;
 use libfat::directory::dir_entry_iterator::DirectoryEntryIterator as FatDirectoryEntryIterator;
+use libfat::directory::File;
 use libfat::FatError;
 use libfat::FatFileSystemResult;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate log;
 
 /// Generic from implementation for FatError to FileSystemError conversion.
 trait IntoFileSystemError<T> {
@@ -66,7 +71,7 @@ struct FileInterface<'a, S: StorageDevice> {
     fs: &'a libfat::filesystem::FatFileSystem<S>,
 
     /// The libfat's directory entry of this file.
-    file_info: FatDirectoryEntry,
+    file_inner: File<'a, S>,
 
     /// The flags applied to the given file.
     mode: FileModeFlags,
@@ -129,14 +134,9 @@ impl<S: StorageDevice> FatFileSystem<S> {
         &self,
         path: &str,
     ) -> FileSystemResult<libfat::directory::Directory<'_, S>> {
-        if path == "/" {
-            Ok(self.inner.get_root_directory())
-        } else {
-            self.inner
-                .get_root_directory()
-                .open_dir(path)
-                .map_err(FileSystemError::from_driver)
-        }
+        self.inner
+            .open_directory(path)
+            .map_err(FileSystemError::from_driver)
     }
 
     /// Open the given storage device as a FAT filesystem.
@@ -151,7 +151,7 @@ impl<S: StorageDevice> FatFileSystem<S> {
 impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
     fn create_file(&self, path: &str, size: u64) -> FileSystemResult<()> {
         self.inner
-            .touch(path)
+            .create_file(path)
             .map_err(FileSystemError::from_driver)?;
 
         let mut file = self.open_file(path, FileModeFlags::APPENDABLE)?;
@@ -159,30 +159,32 @@ impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
     }
 
     fn create_directory(&self, path: &str) -> FileSystemResult<()> {
-        self.inner.mkdir(path).map_err(FileSystemError::from_driver)
+        self.inner
+            .create_directory(path)
+            .map_err(FileSystemError::from_driver)
     }
 
     fn rename_file(&self, old_path: &str, new_path: &str) -> FileSystemResult<()> {
         self.inner
-            .rename(old_path, new_path, false)
+            .rename_file(old_path, new_path)
             .map_err(FileSystemError::from_driver)
     }
 
     fn rename_directory(&self, old_path: &str, new_path: &str) -> FileSystemResult<()> {
         self.inner
-            .rename(old_path, new_path, true)
+            .rename_directory(old_path, new_path)
             .map_err(FileSystemError::from_driver)
     }
 
     fn delete_file(&self, path: &str) -> FileSystemResult<()> {
         self.inner
-            .unlink(path, false)
+            .delete_file(path)
             .map_err(FileSystemError::from_driver)
     }
 
     fn delete_directory(&self, path: &str) -> FileSystemResult<()> {
         self.inner
-            .unlink(path, true)
+            .delete_directory(path)
             .map_err(FileSystemError::from_driver)
     }
 
@@ -193,13 +195,12 @@ impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
     ) -> FileSystemResult<Box<dyn FileOperations + 'a>> {
         let file_entry = self
             .inner
-            .get_root_directory()
             .open_file(path)
             .map_err(FileSystemError::from_driver)?;
 
         let res = Box::new(FileInterface {
             fs: &self.inner,
-            file_info: file_entry,
+            file_inner: file_entry,
             mode,
         });
 
@@ -261,8 +262,7 @@ impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
     fn get_file_timestamp_raw(&self, name: &str) -> FileSystemResult<FileTimeStampRaw> {
         let file_entry = self
             .inner
-            .get_root_directory()
-            .open_file(name)
+            .search_entry(name)
             .map_err(FileSystemError::from_driver)?;
 
         let result = FileTimeStampRaw {
@@ -317,7 +317,7 @@ impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S> {
             return Err(FileSystemError::AccessDenied);
         }
 
-        self.file_info
+        self.file_inner
             .read(self.fs, offset, buf)
             .map_err(FileSystemError::from_driver)
     }
@@ -327,7 +327,7 @@ impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S> {
             return Err(FileSystemError::AccessDenied);
         }
 
-        self.file_info
+        self.file_inner
             .write(
                 self.fs,
                 offset,
@@ -347,13 +347,13 @@ impl<'a, S: StorageDevice> FileOperations for FileInterface<'a, S> {
             return Err(FileSystemError::AccessDenied);
         }
 
-        self.file_info
+        self.file_inner
             .set_len(self.fs, size)
             .map_err(FileSystemError::from_driver)
     }
 
     fn get_len(&mut self) -> FileSystemResult<u64> {
-        Ok(u64::from(self.file_info.file_size))
+        Ok(u64::from(self.file_inner.file_info.file_size))
     }
 }
 

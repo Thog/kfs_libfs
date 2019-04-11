@@ -37,7 +37,7 @@ impl LinuxBlockDevice {
 }
 
 impl BlockDevice for LinuxBlockDevice {
-    fn raw_read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()> {
+    fn read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()> {
         /*trace!(
             "Reading block index 0x{:x} (0x{:x})",
             index.0,
@@ -56,7 +56,7 @@ impl BlockDevice for LinuxBlockDevice {
         Ok(())
     }
 
-    fn raw_write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()> {
+    fn write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()> {
         self.file
             .borrow_mut()
             .seek(SeekFrom::Start(index.into_offset()))
@@ -170,10 +170,10 @@ fn main() -> FileSystemResult<()> {
         StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
     let filesystem = libfs_fat::FatFileSystem::get_raw_partition(system_device)?;
 
-    print_dir(&filesystem, "/", 0, true)?;
+    print_dir(&filesystem, "/", 0, false)?;
 
     let mut file = filesystem.open_file(
-        "/README.md",
+        "/PRF2SAFE.RCV",
         FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
     )?;
     dump_to_file(&mut file, "README.md")?;
