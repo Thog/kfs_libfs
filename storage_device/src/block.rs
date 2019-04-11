@@ -1,6 +1,3 @@
-use lru::LruCache;
-use spin::Mutex;
-
 /// Represent a block operation error.
 #[derive(Debug)]
 pub enum BlockError {
@@ -130,15 +127,17 @@ pub trait BlockDevice: Sized {
 /// flushing, or when they are evicted from the cache.
 ///
 /// When a CachedBlockDevice is dropped, it flushes its cache.
+#[cfg(feature = "cached-block-device")]
 pub struct CachedBlockDevice<B: BlockDevice> {
     /// The inner block device.
     block_device: B,
 
     /// The LRU cache.
-    lru_cache: Mutex<LruCache<BlockIndex, CachedBlock>>,
+    lru_cache: spin::Mutex<lru::LruCache<BlockIndex, CachedBlock>>,
 }
 
 /// Represent a cached block in the LRU cache.
+#[cfg(feature = "cached-block-device")]
 struct CachedBlock {
     /// Bool indicating whether this block should be written to device when flushing.
     dirty: bool,
@@ -146,12 +145,13 @@ struct CachedBlock {
     data: Block,
 }
 
+#[cfg(feature = "cached-block-device")]
 impl<B: BlockDevice> CachedBlockDevice<B> {
     /// Creates a new CachedBlockDevice that wraps `device`, and can hold at most `cap` blocks in cache.
     pub fn new(device: B, cap: usize) -> CachedBlockDevice<B> {
         CachedBlockDevice {
             block_device: device,
-            lru_cache: Mutex::new(LruCache::new(cap)),
+            lru_cache: spin::Mutex::new(lru::LruCache::new(cap)),
         }
     }
 
@@ -173,6 +173,7 @@ impl<B: BlockDevice> CachedBlockDevice<B> {
     }
 }
 
+#[cfg(feature = "cached-block-device")]
 impl<B: BlockDevice> Drop for CachedBlockDevice<B> {
     /// Dropping a CachedBlockDevice flushes it.
     ///
@@ -182,6 +183,7 @@ impl<B: BlockDevice> Drop for CachedBlockDevice<B> {
     }
 }
 
+#[cfg(feature = "cached-block-device")]
 impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
     /// Attempts to fill `blocks` with blocks found in the cache, and will fetch them from device if it can't.
     ///

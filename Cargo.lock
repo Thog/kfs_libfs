@@ -209,7 +209,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "storage_device"
 version = "1.0.0"
 dependencies = [
- "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "lru 0.1.13 (git+https://github.com/Orycterope/lru-rs)",
  "spin 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

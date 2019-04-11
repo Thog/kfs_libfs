@@ -5,6 +5,8 @@ authors = ["Thog <me@thog.eu>", "orycterope <tvermeilh@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-bitflags = "1.0"
-lru = { git = "https://github.com/Orycterope/lru-rs" }
-spin = "0.5.0"
+lru = { git = "https://github.com/Orycterope/lru-rs", optional = true }
+spin = { version = "0.5.0", optional = true }
+
+[features]
+cached-block-device = ["lru", "spin"]
