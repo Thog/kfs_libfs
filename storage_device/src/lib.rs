@@ -1,6 +1,8 @@
 //! Storage device representation module.
 //! Designed to be used in filesystem drivers.
 
+#![no_std]
+
 /// Block device representation.
 pub mod block;
 
