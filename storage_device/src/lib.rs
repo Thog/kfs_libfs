@@ -8,7 +8,7 @@ pub mod block;
 
 pub use block::*;
 
-/// Represent a storage device operation error.
+/// Represent a storage device error.
 #[derive(Debug)]
 pub enum StorageDeviceError {
     /// Read error
@@ -21,7 +21,7 @@ pub enum StorageDeviceError {
     Unknown,
 }
 
-/// Represent a storage device operation result.
+/// Represent a storage device result.
 pub type StorageDeviceResult<T> = core::result::Result<T, StorageDeviceError>;
 
 /// Represent a device managing storage.
@@ -31,7 +31,7 @@ pub trait StorageDevice {
     /// Read the data at the given offset in the storage device into a given buffer.
     fn read(&self, offset: u64, buf: &mut [u8]) -> StorageDeviceResult<()>;
 
-    /// Write the data at the given offset into the storage device.
+    /// Write the data from the given buffer at the given offset in the storage device.
     fn write(&self, offset: u64, buf: &[u8]) -> StorageDeviceResult<()>;
 
     /// Return the total size of the storage device.
@@ -77,8 +77,7 @@ impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
             let current_block_offset = current_offset % Block::LEN_U64;
 
             // Read the block.
-            self.block_device
-                .raw_read(&mut blocks, BlockIndex(current_block_index.0))?;
+            self.block_device.read(&mut blocks, BlockIndex(current_block_index.0))?;
 
             // Slice on the part of the buffer we need.
             let buf_slice = &mut buf[read_size as usize..];
@@ -117,8 +116,7 @@ impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
             let current_block_offset = current_offset % Block::LEN_U64;
 
             // Read the block.
-            self.block_device
-                .raw_read(&mut blocks, BlockIndex(current_block_index.0))?;
+            self.block_device.read(&mut blocks, BlockIndex(current_block_index.0))?;
 
             // Slice on the part of the buffer we need.
             let buf_slice = &buf[write_size as usize..];
@@ -137,8 +135,7 @@ impl<B: BlockDevice> StorageDevice for StorageBlockDevice<B> {
                 *buf_entry = buf_slice[index];
             }
 
-            self.block_device
-                .raw_write(&blocks, BlockIndex(current_block_index.0))?;
+            self.block_device.write(&blocks, BlockIndex(current_block_index.0))?;
 
             // Increment with what we wrote.
             write_size += buf_limit as u64;

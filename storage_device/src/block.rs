@@ -1,17 +1,17 @@
-/// Represent a block operation error.
+/// Represent a block error.
 #[derive(Debug)]
 pub enum BlockError {
-    /// Read error
+    /// Read error.
     ReadError,
 
-    /// Write error
+    /// Write error.
     WriteError,
 
-    /// Unknown error
+    /// Unknown error.
     Unknown,
 }
 
-/// Represent a block operation result.
+/// Represent a block result.
 pub type BlockResult<T> = core::result::Result<T, BlockError>;
 
 /// Represent a certain amount of data from a block device.
@@ -21,12 +21,12 @@ pub struct Block {
     pub contents: [u8; Block::LEN],
 }
 
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 /// Represent the position of a block on a block device.
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct BlockIndex(pub u64);
 
-#[derive(Debug, Copy, Clone)]
 /// Represent the count of blocks that a block device hold.
+#[derive(Debug, Copy, Clone)]
 pub struct BlockCount(pub u64);
 
 impl BlockCount {
@@ -92,30 +92,10 @@ impl BlockCount {
 /// Represent a device holding blocks.
 pub trait BlockDevice: Sized {
     /// Read blocks from the block device starting at the given ``index``.
-    fn raw_read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()>;
+    fn read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()>;
 
     /// Write blocks to the block device starting at the given ``index``.
-    fn raw_write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()>;
-
-    /// Read blocks from the block device starting at the given ``partition_start + index``.
-    fn read(
-        &self,
-        blocks: &mut [Block],
-        partition_start: BlockIndex,
-        index: BlockIndex,
-    ) -> BlockResult<()> {
-        self.raw_read(blocks, BlockIndex(partition_start.0 + index.0))
-    }
-
-    /// Write blocks to the block device starting at the given ``partition_start + index``.
-    fn write(
-        &self,
-        blocks: &[Block],
-        partition_start: BlockIndex,
-        index: BlockIndex,
-    ) -> BlockResult<()> {
-        self.raw_write(blocks, BlockIndex(partition_start.0 + index.0))
-    }
+    fn write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()>;
 
     /// Return the amount of blocks hold by the block device.
     fn count(&self) -> BlockResult<BlockCount>;
@@ -188,7 +168,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
     /// Attempts to fill `blocks` with blocks found in the cache, and will fetch them from device if it can't.
     ///
     /// Will update the access time of every block involved.
-    fn raw_read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()> {
+    fn read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()> {
         let mut lru = self.lru_cache.lock();
         // check if we can satisfy the request only from what we have in cache
         let mut fully_cached = true;
@@ -246,7 +226,7 @@ impl<B: BlockDevice> BlockDevice for CachedBlockDevice<B> {
     ///
     /// When the cache is full, least recently used blocks will be evicted and written to device.
     /// This operation may fail, and this function will return an error when it happens.
-    fn raw_write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()> {
+    fn write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()> {
         let mut lru = self.lru_cache.lock();
 
         if blocks.len() < lru.cap() {
