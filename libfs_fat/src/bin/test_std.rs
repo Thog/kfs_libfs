@@ -37,7 +37,7 @@ impl LinuxBlockDevice {
 }
 
 impl BlockDevice for LinuxBlockDevice {
-    fn read(&self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()> {
+    fn read(&mut self, blocks: &mut [Block], index: BlockIndex) -> BlockResult<()> {
         /*trace!(
             "Reading block index 0x{:x} (0x{:x})",
             index.0,
@@ -56,7 +56,7 @@ impl BlockDevice for LinuxBlockDevice {
         Ok(())
     }
 
-    fn write(&self, blocks: &[Block], index: BlockIndex) -> BlockResult<()> {
+    fn write(&mut self, blocks: &[Block], index: BlockIndex) -> BlockResult<()> {
         self.file
             .borrow_mut()
             .seek(SeekFrom::Start(index.into_offset()))
@@ -67,7 +67,7 @@ impl BlockDevice for LinuxBlockDevice {
         Ok(())
     }
 
-    fn count(&self) -> BlockResult<BlockCount> {
+    fn count(&mut self) -> BlockResult<BlockCount> {
         let num_blocks = self.file.borrow().metadata().unwrap().len() / (Block::LEN_U64);
         Ok(BlockCount(num_blocks))
     }
