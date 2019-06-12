@@ -1,5 +1,4 @@
 //! libfs compatibility layer arround libfat.
-#![feature(alloc)]
 #![no_std]
 
 extern crate alloc;

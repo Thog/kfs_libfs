@@ -1,5 +1,4 @@
 //! Interface to manipulate filesystem
-#![feature(alloc)]
 #![no_std]
 
 extern crate alloc;
