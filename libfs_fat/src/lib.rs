@@ -70,7 +70,7 @@ struct FileInterface<'a, S: StorageDevice> {
     fs: &'a libfat::filesystem::FatFileSystem<S>,
 
     /// The libfat's directory entry of this file.
-    file_inner: File<'a, S>,
+    file_inner: File,
 
     /// The flags applied to the given file.
     mode: FileModeFlags,
