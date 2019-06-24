@@ -19,6 +19,7 @@ use libfat::directory::dir_entry_iterator::DirectoryEntryIterator as FatDirector
 use libfat::directory::File;
 use libfat::FatError;
 use libfat::FatFileSystemResult;
+use libfat::FileSystemIterator;
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -51,11 +52,14 @@ impl IntoFileSystemError<FatError> for FileSystemError {
 
 /// A libfat directory reader implementing ``DirectoryOperations``.
 struct DirectoryReader<'a, S: StorageDevice> {
+    /// Internal interface to libfat's filesystem.
+    fs: &'a libfat::filesystem::FatFileSystem<S>,
+
     /// The opened directory path. Used to get the complete path of every entries.
     base_path: [u8; DirectoryEntry::PATH_LEN],
 
     /// The iterator used to iter over libfat's directory entries.
-    internal_iter: FatDirectoryEntryIterator<'a, S>,
+    internal_iter: FatDirectoryEntryIterator,
 
     /// The filter required by the user.
     filter_fn: &'static dyn Fn(&FatFileSystemResult<FatDirectoryEntry>) -> bool,
@@ -229,7 +233,11 @@ impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
         // find a better way of doing this
         let target_dir_clone = self.get_dir_from_path(path)?;
 
-        let entry_count = target_dir.iter().filter(filter_fn).count() as u64;
+        let entry_count = target_dir
+            .iter()
+            .to_iterator(&self.inner)
+            .filter(filter_fn)
+            .count() as u64;
 
         let mut data: [u8; DirectoryEntry::PATH_LEN] = [0x0; DirectoryEntry::PATH_LEN];
         for (index, c) in path
@@ -249,6 +257,7 @@ impl<S: StorageDevice> FileSystemOperations for FatFileSystem<S> {
         }
 
         let res = Box::new(DirectoryReader {
+            fs: &self.inner,
             base_path: data,
             internal_iter: target_dir_clone.iter(),
             filter_fn,
@@ -280,7 +289,7 @@ impl<'a, S: StorageDevice> DirectoryOperations for DirectoryReader<'a, S> {
         for (index, entry) in buf.iter_mut().enumerate() {
             let mut raw_dir_entry;
             loop {
-                let entry_opt = self.internal_iter.next();
+                let entry_opt = self.internal_iter.next(self.fs);
 
                 // Prematury ending
                 if entry_opt.is_none() {
