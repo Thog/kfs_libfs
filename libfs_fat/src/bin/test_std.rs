@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
@@ -9,10 +10,9 @@ use std::path::Path;
 use libfs::*;
 use storage_device::*;
 
-#[macro_use]
-extern crate log;
-
 extern crate env_logger;
+
+use libfat::FatFsType;
 
 #[derive(Debug)]
 struct LinuxBlockDevice {
@@ -164,7 +164,12 @@ fn dump_to_filesystem<'a>(
 }
 
 fn main() -> FileSystemResult<()> {
+    std::env::set_var("RUST_LOG", "libfat=debug");
     env_logger::init();
+
+    let system_device =
+        StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
+    libfat::format_raw_partition(system_device, FatFsType::Fat16).unwrap();
 
     let system_device =
         StorageBlockDevice::new(LinuxBlockDevice::new(std::env::args().nth(1).unwrap()).unwrap());
@@ -172,12 +177,14 @@ fn main() -> FileSystemResult<()> {
 
     print_dir(&filesystem, "/", 0, false)?;
 
+    filesystem.create_file("/LICENSE-APACHE", 0)?;
+
     let mut file = filesystem.open_file(
-        "/PRF2SAFE.RCV",
+        "/LICENSE-APACHE",
         FileModeFlags::READABLE | FileModeFlags::WRITABLE | FileModeFlags::APPENDABLE,
     )?;
-    dump_to_file(&mut file, "README.md")?;
+    dump_to_filesystem(&mut file, "LICENSE-APACHE")?;
 
-    //print_dir(&filesystem, "/", 0, false)?;
+    print_dir(&filesystem, "/", 0, false)?;
     Ok(())
 }
